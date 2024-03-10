@@ -1,6 +1,6 @@
 OUTPUT_FORMAT(elf64-x86-64)
 OUTPUT_ARCH(i386:x86-64)
-ENTRY(_start)
+ENTRY(start)
 
 mb_magic = 0xe85250d6;
 mb_arch = 0;
@@ -18,7 +18,6 @@ SECTIONS
 		SHORT(0);
 		LONG(8);
 	}
-
 	.text :
 	{
 		*(.text)

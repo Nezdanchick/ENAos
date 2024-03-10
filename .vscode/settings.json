@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "screen.h": "c",
+        "string.h": "c",
+        "stdlib.h": "c"
+    }
+}
