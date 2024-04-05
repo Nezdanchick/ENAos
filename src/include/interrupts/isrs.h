@@ -1,6 +1,6 @@
 #pragma once
 
-#include <registers.h>
+#include <cpu_context.h>
 
 typedef cpu_context_t* exception_handler(cpu_context_t* context);
 typedef void irq_handler(void);
