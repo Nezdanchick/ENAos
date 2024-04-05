@@ -1,5 +1,5 @@
 ARCH=x86_64
-RUNNER=qemu-system-$(ARCH)
+RUNNER=qemu-system-$(ARCH) -d int --no-reboot -audiodev pa,id=speaker -machine pcspk-audiodev=speaker
 
 KERNEL=./bin/$(ARCH)-kernel
 ISO=./bin/nandos.iso
@@ -14,11 +14,10 @@ x86_64_c_object_files := $(patsubst src/x86_64/%.c, bin/x86_64/%.o, $(x86_64_c_s
 kernel_c_source_files := $(shell find src/kernel -name *.c)
 kernel_c_object_files := $(patsubst src/kernel/%.c, bin/kernel/%.o, $(kernel_c_source_files))
 
-CC_FLAGS=-c -I./src/include/ -ffreestanding -O2 -Wall -Wextra
+CC_FLAGS=-c -I./src/include/ -O2 -ffreestanding -fno-builtin -nostdlib -mno-red-zone -mcmodel=kernel -Wall -Wextra
 LD_FLAGS=-n -o $(KERNEL) -T ./target/$(ARCH)/linker.ld
 
-	
-all: build create-iso debug
+all: clean build create-iso debug
 
 build: $(kernel_c_object_files) $(x86_64_c_object_files) $(x86_64_asm_object_files)
 	@echo Building...
@@ -27,9 +26,10 @@ build: $(kernel_c_object_files) $(x86_64_c_object_files) $(x86_64_asm_object_fil
 
 debug:
 	@echo Debugging...
-	$(RUNNER) $(ISO) --no-reboot
+	$(RUNNER) $(ISO)
 	
 create-iso: build
+	grub-file --is-x86-multiboot2 $(KERNEL)
 	@mkdir -p $(dir $(ISO))
 	cp $(KERNEL) $(ISO_PATH)/boot/kernel
 	grub-mkrescue \

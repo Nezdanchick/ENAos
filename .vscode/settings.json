@@ -1,7 +1,9 @@
 {
     "files.associations": {
-        "screen.h": "c",
-        "string.h": "c",
-        "stdlib.h": "c"
+        "idt.h": "c",
+        "isrs.h": "c",
+        "pic.h": "c",
+        "interrupts.h": "c",
+        "registers.h": "c"
     }
 }
