@@ -1,5 +1,6 @@
 #include <screen.h>
 #include <string.h>
+#include <memory.h>
 
 void *video = (void *)0xb8000;
 
@@ -21,9 +22,9 @@ void checkPosition()
     if (y >= SCREEN_SIZE_Y)
     {
         for (int i = SCREEN_SIZE_X * 2; i < SCREEN_SIZE * 2; i++)
-        {
-            *((char*)video + i - SCREEN_SIZE_X * 2) = *((char*)video + i);
-        }
+            *((char *)video + i - SCREEN_SIZE_X * 2) = *((char *)video + i);
+        for (int i = (SCREEN_SIZE - SCREEN_SIZE_X) * 2; i < SCREEN_SIZE * 2; i++)
+            *((char *)video + i) = 0;
         y = SCREEN_SIZE_Y - 1;
     }
 }

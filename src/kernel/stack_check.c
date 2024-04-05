@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <panic.h>
 
 #if UINT32_MAX == UINTPTR_MAX
 #define STACK_CHK_GUARD 0xe2dee396
@@ -15,7 +16,5 @@ __attribute__((noreturn)) void __stack_chk_fail(void)
 #if __STDC_HOSTED__
 	abort();
 #endif
-	while (true)
-	{
-	}
+	panic("stack check failed");
 }

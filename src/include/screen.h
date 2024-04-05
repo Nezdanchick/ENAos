@@ -32,6 +32,6 @@ extern void screenSetColor(uint8_t foreground, uint8_t background);
 extern void screenWrite(char *string);
 extern void screenWriteLine(char *string);
 
-size_t getPosition();
-void setPosition(int collumn, int row);
-void setPositionTo(int position);
+extern size_t getPosition();
+extern void setPosition(int collumn, int row);
+extern void setPositionTo(int position);

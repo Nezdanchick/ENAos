@@ -7,15 +7,6 @@ char *strcpy(char *destination, const char *source)
     return destination;
 }
 
-void *memset(void *buffer, int value, size_t size)
-{
-    while (size-- > 0)
-    {
-        *(int *)buffer++ = value;
-    }
-    return buffer;
-}
-
 char *strext(char *destination, char *source, char attribute)
 {
     while (*source != '\0')

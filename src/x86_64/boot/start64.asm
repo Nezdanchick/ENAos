@@ -14,4 +14,5 @@ start64:
 
 	call main
 
-	hlt
+.halt:
+    jmp .halt
