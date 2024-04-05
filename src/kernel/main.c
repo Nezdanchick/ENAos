@@ -1,20 +1,38 @@
-#include <screen.h>
-#include <string.h>
 #include <stdbool.h>
+#include <string.h>
+#include <screen.h>
+#include <pcspeaker.h>
+#include <asm.h>
+#include <interrupts.h>
 
+void kb_handler()
+{
+    uint8_t scancode = inb(0x60);
+    screenSetColor(scancode % 15 + 1, SCREEN_COLOR_BLACK);
+    screenWrite("Key scancode: ");
+    screenWriteLine(itoa(scancode, NULL, 10));
+}
+uint64_t ms = 0;
+void pit_handler()
+{
+    ms += 20;
+}
+
+extern uint16_t idt_table;
 void main()
 {
     screenClear();
+    interrupts_init();
+    set_irq_handler(32, pit_handler);
+    set_irq_handler(33, kb_handler);
+    asm("sti");
+
+    screenWriteLine("Welcome to nandos!");
     
-    for (size_t i = 0; true; i++)
+    while (ms <= 1000)  // wait
     {
-        screenSetColor(i % 16, (i + 8) % 16);
-        screenWrite("Hello, 64 bit world!");
-        screenWrite(" ");
-        screenWrite(itoa(i, NULL, 10));
-        screenWrite(" ");
-        screenWriteLine(itoa(getPosition(), NULL, 10));
-        for (long sleep_i = 0; sleep_i < 100000; sleep_i++)
-            screenSetColor(SCREEN_COLOR_WHITE, SCREEN_COLOR_BLACK); // don't optimized
+        setPosition(0, 2);
+        screenWrite("Milliseconds: ");
+        screenWriteLine(itoa(ms, NULL, 10));
     }
 }
