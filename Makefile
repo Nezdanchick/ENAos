@@ -38,7 +38,7 @@ create-iso: build
 	--fonts="unicode" \
 	--locales="" \
 	--themes="" \
-	--install-modules="multiboot2 \
+	--install-modules="multiboot2 normal \
 	part_acorn part_amiga part_apple part_bsd part_dfly \
 	part_dvh part_gpt part_plan part_sun part_sunpc" \
 	-o $(ISO) $(ISO_PATH)
