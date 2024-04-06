@@ -1,9 +1,0 @@
-{
-    "files.associations": {
-        "idt.h": "c",
-        "isrs.h": "c",
-        "pic.h": "c",
-        "interrupts.h": "c",
-        "registers.h": "c"
-    }
-}
