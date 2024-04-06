@@ -34,7 +34,7 @@ cpu_context_t *handle_exception(uint8_t exception, uint64_t error_code, cpu_cont
     exception_handler *handler = exception_handlers[exception];
 
     if (handler != NULL)
-        context = handler(context);
+        context = handler(context, error_code);
 
     return context;
 }
