@@ -4,6 +4,7 @@
 #include <pcspeaker.h>
 #include <asm.h>
 #include <interrupts.h>
+#include <timer.h>
 
 void kb_handler()
 {
@@ -12,27 +13,17 @@ void kb_handler()
     screenWrite("Key scancode: ");
     screenWriteLine(itoa(scancode, NULL, 10));
 }
-uint64_t ms = 0;
-void pit_handler()
-{
-    ms += 20;
-}
-
-extern uint16_t idt_table;
 void main()
 {
     screenClear();
     interrupts_init();
-    set_irq_handler(32, pit_handler);
     set_irq_handler(33, kb_handler);
+    timer_init();
     asm("sti");
 
     screenWriteLine("Welcome to nandos!");
-    
-    while (ms <= 1000)  // wait
-    {
-        setPosition(0, 2);
-        screenWrite("Milliseconds: ");
-        screenWriteLine(itoa(ms, NULL, 10));
-    }
+    beep(500, 100);
+    beep(1500, 100);
+    beep(100, 200);
+    screenWriteLine("We have timed beep!");
 }

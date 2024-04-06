@@ -1,4 +1,5 @@
 #include <pcspeaker.h>
+#include <timer.h>
 #include <asm.h>
 
 void play_sound(uint32_t frequence)
@@ -26,6 +27,6 @@ void mute()
 void beep(int frequence, int length)
 {
     play_sound(frequence);
-    // sleep(length); // TODO sleep(ms)
+    sleep_ms(length);
     mute();
 }
