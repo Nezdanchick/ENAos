@@ -27,11 +27,12 @@ enum uint8_t {
     SCREEN_COLOR_WHITE
 };
 
-extern void screenClear();
-extern void screenSetColor(uint8_t foreground, uint8_t background);
-extern void screenWrite(char *string);
-extern void screenWriteLine(char *string);
+extern void screen_init();
 
-extern size_t getPosition();
-extern void setPosition(int collumn, int row);
-extern void setPositionTo(int position);
+extern void screen_clear();
+extern void screen_set_color(uint8_t foreground, uint8_t background);
+extern void screen_write(char *string);
+
+extern int get_position();
+extern void set_position(int collumn, int row);
+extern void set_position_to(int position);
