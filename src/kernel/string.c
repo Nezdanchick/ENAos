@@ -6,6 +6,17 @@ char *strcpy(char *destination, const char *source)
         *destination++ = *source++;
     return destination;
 }
+bool strcmp(const char *a, const char *b)
+{
+    if (strlen(a) != strlen(b))
+        return false;
+    while (*a != '\0' && *b != '\0')
+    {
+        if (*a++ != *b++)
+            return false;
+    }
+    return true;
+}
 
 char *strext(char *destination, char *source, char attribute)
 {
