@@ -15,12 +15,12 @@ kernel_c_source_files := $(shell find src/kernel -name *.c)
 kernel_c_object_files := $(patsubst src/kernel/%.c, bin/kernel/%.o, $(kernel_c_source_files))
 
 CC=clang
-LD=ld
+LD=ld.lld
 AS=nasm
 
-CC_FLAGS=-c -I./src/include/ -O2 -ffreestanding -fno-builtin -fPIE -nostdlib -mno-red-zone -Wall -Wextra \
--target $(ARCH)
-LD_FLAGS=-n -o $(KERNEL) -melf_x86_64 -T ./target/$(ARCH)/linker.ld
+CC_FLAGS=-c -I./src/include/ -O3 -ffreestanding -fno-builtin -nostdlib \
+-mno-red-zone -Wall -Wextra -target $(ARCH)-unknown-none
+LD_FLAGS=-o $(KERNEL) -T ./target/$(ARCH)/linker.ld -nostdlib -no-pie
 AS_FLAGS=-felf64
 
 all: clean build create-iso debug
@@ -52,13 +52,13 @@ create-iso: build
 clean:
 	rm -rf ./bin
 	
-$(x86_64_asm_object_files): bin/x86_64/%.o : src/x86_64/%.asm
+$($(ARCH)_asm_object_files): bin/$(ARCH)/%.o : src/$(ARCH)/%.asm
 	mkdir -p $(dir $@)
-	$(AS) $(AS_FLAGS) $(patsubst bin/x86_64/%.o, src/x86_64/%.asm, $@) -o $@
+	$(AS) $(AS_FLAGS) $(patsubst bin/$(ARCH)/%.o, src/$(ARCH)/%.asm, $@) -o $@
 
-$(x86_64_c_object_files): bin/x86_64/%.o : src/x86_64/%.c
+$($(ARCH)_c_object_files): bin/$(ARCH)/%.o : src/$(ARCH)/%.c
 	mkdir -p $(dir $@)
-	$(CC) $(CC_FLAGS) $(patsubst bin/x86_64/%.o, src/x86_64/%.c, $@) -o $@
+	$(CC) $(CC_FLAGS) $(patsubst bin/$(ARCH)/%.o, src/$(ARCH)/%.c, $@) -o $@
 
 $(kernel_c_object_files): bin/kernel/%.o : src/kernel/%.c
 	mkdir -p $(dir $@)
