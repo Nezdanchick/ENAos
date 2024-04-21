@@ -1,24 +1,25 @@
 section .multiboot_header
 
 MAGIC equ 0xe85250d6
-ARCH equ 0
+ARCHITECTURE equ 0
 LENGTH equ (mb_header_end - mb_header_start)
+CHECKSUM equ 0x100000000 - (MAGIC + ARCHITECTURE + LENGTH)
 
 mb_header_start:
     dd MAGIC
-    dd ARCH
+    dd ARCHITECTURE
     dd LENGTH
     ; checksum
-    dd 0x100000000 - (MAGIC + ARCH + LENGTH)
+    dd CHECKSUM
 
     ; dw 5    ; framebuffer
     ; dw 0    ; optional tag
     ; dd 20   ; length of tag
-    ; dd 320 ; width
-    ; dd 200  ; height
+    ; dd 640  ; width
+    ; dd 480  ; height
     ; dd 32   ; bit depth
 
-    ; dw 0 ; align
+    ; dw 0    ; align
 
     ; end tag
     dw 0

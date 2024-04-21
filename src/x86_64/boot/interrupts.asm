@@ -8,9 +8,8 @@
 ; general purpose register) and restores provided cpu context
 ; after calling C handler.
 
-bits 64
-
 section .text
+bits 64
 
 ; C handlers defined in isrs.c
 extern handle_exception
