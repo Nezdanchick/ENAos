@@ -5,25 +5,52 @@
 #include <asm.h>
 #include <interrupts.h>
 #include <timer.h>
+#include <keyboard.h>
+#include <memory.h>
+#include <stdio.h>
 
-void kb_handler()
-{
-    uint8_t scancode = inb(0x60);
-    screenSetColor(scancode % 15 + 1, SCREEN_COLOR_BLACK);
-    screenWrite("Key scancode: ");
-    screenWriteLine(itoa(scancode, NULL, 10));
-}
 void main()
 {
-    screenClear();
+    screen_init();
     interrupts_init();
-    set_irq_handler(33, kb_handler);
     timer_init();
+    keyboard_init();
     asm("sti");
 
-    screenWriteLine("Welcome to nandos!");
-    beep(500, 100);
-    beep(1500, 100);
-    beep(100, 200);
-    screenWriteLine("We have timed beep!");
+    char *loader = "/|\\-";
+    char progressbar[60];
+    memset(progressbar, '_', 60);
+    progressbar[0] = '[';
+    progressbar[strlen(progressbar) - 1] = ']';
+
+    for (int i = 0; true; i++)
+    {
+        progressbar[i + 1] = '#';
+        printf(" Loading... %s %c\r", progressbar, loader[i % strlen(loader)]);
+        sleep_ms(100);
+
+        if (progressbar[strlen(progressbar) - 2] == '#')
+            break;
+    }
+    terminal_clear();
+    printf("Welcome to nandos! \n");
+    char input_buffer[128];
+    while (true)
+    {
+        memset(input_buffer, 0, 128);
+        printf("/>");
+        gets(input_buffer);
+
+        if (strcmp(input_buffer, "exit"))
+            break;
+        else if (strcmp(input_buffer, "help"))
+            printf("Nobody will help you\n");
+        else if (strcmp(input_buffer, "clear"))
+            terminal_clear();
+        else if (strcmp(input_buffer, "lol"))
+            printf("Why?\n");
+        else if (!strcmp(input_buffer, "\0"))
+            printf("%s\n", input_buffer);
+    }
+    printf("Goodbye!\n");
 }
