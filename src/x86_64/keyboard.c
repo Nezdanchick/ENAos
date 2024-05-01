@@ -24,10 +24,6 @@ char kb_keys[] = " " // zero
 uint8_t kb_buffer[KB_BUFFER_SIZE];
 uint8_t key_scancode;
 
-char key_to_char(keyboard_key_t key)
-{
-    return kb_keys[key.scancode];
-}
 uint8_t char_to_scancode(char character)
 {
     for (int i = 0; i < 94; i++)
@@ -65,6 +61,9 @@ keyboard_key_t keyboard_input()
 
     key.scancode = key_scancode;
     key.pressed = is_key_pressed((enum Key)key_scancode);
+    
+    if (is_key_printable(key))
+        key.character = kb_keys[key_scancode];
     
     if (kb_buffer[key_scancode] == KEY_RELEASED)
         kb_buffer[key_scancode] = 0;

@@ -12,6 +12,11 @@ enum Key
     NumLock = 0x45,
     ScrollLock = 0x46,
 
+    UpArrow = 0x48,
+    LeftArrow = 0x4B,
+    RightArrow = 0x4D,
+    DownArrow = 0x50,
+
     Escape = 0x01,
     Enter = 0x1C,
     Backspace = 0x0E,

@@ -37,7 +37,6 @@ void backspace()
 }
 char *gets(char *string)
 {
-    char character;
     char *address = string;
 
     keyboard_key_t key = (keyboard_key_t){0};
@@ -57,11 +56,10 @@ char *gets(char *string)
             break;
 
         default:
-            character = key_to_char(key);
             if (is_key_printable(key))
             {
-                putchar(character);
-                *string++ = character;
+                putchar(key.character);
+                *string++ = key.character;
             }
             break;
         }
