@@ -1,4 +1,7 @@
 #include <string.h>
+#include <math.h>
+
+const char NUMERIC_STRING[] = "0123456789abcdefghijklmnopqrstuvwxyz";
 
 char *strcpy(char *destination, const char *source)
 {
@@ -6,16 +9,21 @@ char *strcpy(char *destination, const char *source)
         *destination++ = *source++;
     return destination;
 }
-bool strcmp(const char *a, const char *b)
+bool strncmp(const char *a, const char *b, size_t length)
 {
-    if (strlen(a) != strlen(b))
-        return false;
-    while (*a != '\0' && *b != '\0')
+    for (size_t i = 0; i < length; i++)
     {
         if (*a++ != *b++)
             return false;
     }
     return true;
+}
+bool strcmp(const char *a, const char *b)
+{
+    size_t length = strlen(a);
+    if (length != strlen(b))
+        return false;
+    return strncmp(a, b, length);
 }
 
 char *strext(char *destination, char *source, char attribute)
@@ -27,7 +35,23 @@ char *strext(char *destination, char *source, char attribute)
     }
     return destination;
 }
-
+char *strtok(char *string, const char *separator)
+{
+    char *start = string;
+    size_t length = strlen(separator);
+    while (*string++)
+    {
+        for (size_t i = 0; i < length; i++)
+        {
+            if (*string == separator[i])
+            {
+                *string++ = '\0';
+                return start;
+            }
+        }
+    }
+    return NULL;
+}
 size_t strlen(const char *string)
 {
     size_t i = 0;
@@ -36,40 +60,50 @@ size_t strlen(const char *string)
     return i;
 }
 
-char *itoa(size_t value, char *str, int base)
+char *itoa(int value, char *str, int base)
 {
-    char *rc;
+    char *result;
     char *ptr;
-    char *low;
+    char *start;
     // Check for supported base.
     if (base < 2 || base > 36)
     {
         *str = '\0';
         return str;
     }
-    rc = ptr = str;
+    result = ptr = str;
     // Set '-' for negative decimals.
     if (value < 0 && base == 10)
     {
         *ptr++ = '-';
+        value = -value;
     }
-    // Remember where the numbers start.
-    low = ptr;
-    // The actual conversion.
+    start = ptr;
     do
     {
-        // Modulo is negative for negative value. This trick makes abs() unnecessary.
-        *ptr++ = "zyxwvutsrqponmlkjihgfedcba9876543210123456789abcdefghijklmnopqrstuvwxyz"[35 + value % base];
+        *ptr++ = NUMERIC_STRING[abs(value % base)];
         value /= base;
     } while (value);
     // Terminating the string.
     *ptr-- = '\0';
     // Invert the numbers.
-    while (low < ptr)
+    while (start < ptr)
     {
-        char tmp = *low;
-        *low++ = *ptr;
+        char tmp = *start;
+        *start++ = *ptr;
         *ptr-- = tmp;
     }
-    return rc;
+    return result;
+}
+int atoi(const char *string)
+{
+    size_t i = 0;
+    int result = 0;
+    if (*string == '-')
+        i++;
+    for (; string[i] >= '0' && string[i] <= '9'; ++i)
+        result = 10 * result + (string[i] - '0');
+    if (*string == '-')
+        result *= -1;
+    return result;
 }
