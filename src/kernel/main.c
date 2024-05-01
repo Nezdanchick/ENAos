@@ -79,7 +79,7 @@ void main()
         else if (strcmp(input_buffer, "beep"))
             printf("\b");
         else if (strncmp(input_buffer, "echo", 4))
-            printf("%s\n", &input_buffer[6]);
+            printf("%s\n", &input_buffer[5]);
         else if (strncmp(input_buffer, "add", 3))
         {
             char **args = get_args(&input_buffer[4], 2, ' ');
