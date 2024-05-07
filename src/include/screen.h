@@ -33,6 +33,6 @@ extern void screen_clear();
 extern void screen_set_color(uint8_t foreground, uint8_t background);
 extern void screen_write(char *string);
 
-extern int get_position();
+extern int screen_get_position();
 extern void set_position(int collumn, int row);
 extern void set_position_to(int position);

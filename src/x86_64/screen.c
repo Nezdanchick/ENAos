@@ -4,7 +4,7 @@
 #include <cursor.h>
 #include <stdio.h>
 
-void *video = (void *)0xb8000;
+void *video_text = (void *)0xb8000;
 char black_screen[SCREEN_SIZE];
 
 uint8_t x = 0;
@@ -17,7 +17,7 @@ void screen_init()
 
     screen_clear();
     set_stdout(screen_write);
-    set_getpos(get_position);
+    set_getpos(screen_get_position);
     set_setpos(set_position);
     set_clear(screen_clear);
 
@@ -26,19 +26,19 @@ void screen_init()
 
     enable_cursor();
 }
-int get_position()
+int screen_get_position()
 {
     return x + y * SCREEN_SIZE_X;
 }
-void scroll()
+void screen_scroll()
 {
     for (int i = SCREEN_SIZE_X * 2; i < SCREEN_SIZE * 2; i++)
-        *((char *)video + i - SCREEN_SIZE_X * 2) = *((char *)video + i);
+        *((char *)video_text + i - SCREEN_SIZE_X * 2) = *((char *)video_text + i);
     for (int i = (SCREEN_SIZE - SCREEN_SIZE_X); i < SCREEN_SIZE; i++)
-        *((char *)video + i * 2) = 0;
+        *((char *)video_text + i * 2) = 0;
     y = SCREEN_SIZE_Y - 1;
 }
-void checkPosition()
+void screen_check_position()
 {
     if (x > SCREEN_SIZE_X)
     {
@@ -46,25 +46,25 @@ void checkPosition()
         x = x % SCREEN_SIZE_X;
     }
     if (y >= SCREEN_SIZE_Y)
-        scroll();
+        screen_scroll();
     update_cursor(x, y);
 }
 void set_position_to(int position)
 {
     x = position;
-    checkPosition();
+    screen_check_position();
 }
 void set_position(int collumn, int row)
 {
     x = collumn;
     y = row;
-    checkPosition();
+    screen_check_position();
 }
 void screen_clear()
 {
     x = 0;
     y = 0;
-    strext(video, black_screen, color);
+    strext(video_text, black_screen, color);
     update_cursor(x, y);
 }
 void screen_set_color(uint8_t foreground, uint8_t background)
@@ -73,7 +73,7 @@ void screen_set_color(uint8_t foreground, uint8_t background)
 }
 void screen_write(char *string)
 {
-    strext((video + get_position() * 2), string, color);
+    strext((video_text + screen_get_position() * 2), string, color);
     x += strlen(string);
-    checkPosition();
+    screen_check_position();
 }
