@@ -1,20 +1,10 @@
-; code from https://github.com/And1sS/sos/
-
-; Irq handlers entry-points.
-
-; Hardware irqs are handled with interrupts disabled.
-
-; Each handler pushes current cpu context on the stack (each
-; general purpose register) and restores provided cpu context
-; after calling C handler.
+; optimized code from https://github.com/And1sS/sos/
 
 section .text
 bits 64
 
 ; C handlers defined in isrs.c
-extern handle_exception
-extern handle_soft_irq
-extern handle_hard_irq
+extern handle_interrupt
 
 %macro save_ds 0
     mov bx, ds
@@ -68,127 +58,80 @@ extern handle_hard_irq
     add rsp, 8 ; remove error code from stack
 %endmacro
 
-; x86-64 exception with error code handler stub
-%macro esr_error_code 1
-global esr_%1
-esr_%1:
-    save_state
-
-    mov rdi, %1  ; interrupt number
+common_irq_stub:
     mov rsi, [rsp + 16 * 8] ; stack top initially holds error code,
                             ; we move it here so that we don't scratch
                             ; rsi value before saving state
 
     mov rdx, rsp ; cpu_context pointer
-    call handle_exception
-
-    ; Now we run in probably new context
-    mov rsp, rax
+    call handle_interrupt
 
     restore_state
 
     iretq
-%endmacro
 
-
-; x86-64 exception without error code handler stub
-%macro esr_no_error_code 1
-global esr_%1
-esr_%1:
-    push 0 ; push fake error code
+; Exception
+%macro esr 1
+isr_%1:
     save_state
 
     mov rdi, %1  ; interrupt number
-    mov rsi, 0   ; error code
-    mov rdx, rsp ; cpu_context pointer
-    call handle_exception
-
-    ; Now we run in probably new context
-    mov rsp, rax
-
-    restore_state
-    iretq
+    jmp common_irq_stub
 %endmacro
 
-
-; Software interrupts handler stub
-%macro isr_soft 1
-global isr_%1
+; Interrupt
+%macro isr 1
 isr_%1:
     push 0 ; push fake error code
     save_state
 
     mov rdi, %1  ; interrupt number
-    mov rsi, rsp ; cpu_context pointer
-    call handle_soft_irq
-
-    ; Now we run in probably new context
-    mov rsp, rax
-
-    restore_state
-    iretq
+    jmp common_irq_stub
 %endmacro
 
-; Hardware interrupts handler stub
-%macro isr_hard 1
-global isr_%1
-isr_%1:
-    cli
-    push 0 ; push fake error code
-    save_state
-
-    mov rdi, %1
-    mov rsi, rsp
-    call handle_hard_irq
-
-    ; Now we run in probably new context
-    mov rsp, rax
-
-    restore_state
-    iretq
-%endmacro
-
-esr_no_error_code 0
-esr_no_error_code 1
-esr_no_error_code 2
-esr_no_error_code 3
-esr_no_error_code 4
-esr_no_error_code 5
-esr_no_error_code 6
-esr_no_error_code 7
-esr_error_code 8
-esr_no_error_code 9
-esr_error_code 10
-esr_error_code 11
-esr_error_code 12
-esr_error_code 13
-esr_error_code 14
-esr_no_error_code 15
-esr_no_error_code 16
-esr_error_code 17
-esr_no_error_code 18
-esr_no_error_code 19
-esr_no_error_code 20
-esr_error_code 21
-esr_no_error_code 22
-esr_no_error_code 23
-esr_no_error_code 24
-esr_no_error_code 25
-esr_no_error_code 26
-esr_no_error_code 27
-esr_no_error_code 28
-esr_error_code 29
-esr_error_code 30
-esr_no_error_code 31
+isr 0
+isr 1
+isr 2
+isr 3
+isr 4
+isr 5
+isr 6
+isr 7
+esr 8
+isr 9
+esr 10
+esr 11
+esr 12
+esr 13
+esr 14
+isr 15
+isr 16
+esr 17
+isr 18
+isr 19
+isr 20
+esr 21
+isr 22
+isr 23
+isr 24
+isr 25
+isr 26
+isr 27
+isr 28
+esr 29
+esr 30
+isr 31
 
 %assign i 32
-%rep   48 - 32
-       isr_hard i
+%rep    256 - 32
+    isr i
 %assign i i+1
 %endrep
 
-%assign i 48
-%rep    256 - 48
-        isr_soft i
+global isr_table
+isr_table:
+%assign i 0
+%rep    256
+    dq isr_%+i
 %assign i i+1
 %endrep
