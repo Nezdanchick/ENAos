@@ -19,9 +19,9 @@ LD=ld.lld
 AS=nasm
 
 CC_FLAGS=-c -I./src/include/ -O3 -ffreestanding -fno-builtin -nostdlib \
--mno-red-zone -Wall -Wextra -target $(ARCH)-unknown-none
+-mno-red-zone -mcmodel=kernel -Wall -Wextra -target $(ARCH)-unknown-none
 LD_FLAGS=-o $(KERNEL) -T ./target/$(ARCH)/linker.ld -nostdlib -no-pie
-AS_FLAGS=-felf64
+AS_FLAGS=-felf64 -O3
 
 all: clean build create-iso debug
 

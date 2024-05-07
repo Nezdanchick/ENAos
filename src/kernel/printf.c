@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <pcspeaker.h>
+#include <serial.h>
 
 void newline()
 {
@@ -14,7 +15,13 @@ void carriage_return()
 }
 void putchar(char character)
 {
+    putserial(character);
     terminal_output((char[2]){character, '\0'});
+}
+void puts(char *string)
+{
+    serial_write(string);
+    terminal_output(string);
 }
 void printf(const char *fmt, ...)
 {
@@ -28,19 +35,19 @@ void printf(const char *fmt, ...)
             switch (*fmt)
             {
             case 'd':
-                terminal_output(itoa(va_arg(args, int), NULL, 10));
+                puts(itoa(va_arg(args, int), NULL, 10));
                 break;
             case 'x':
-                terminal_output(itoa(va_arg(args, int), NULL, 16));
+                puts(itoa(va_arg(args, int), NULL, 16));
                 break;
             case 'c':
                 putchar(va_arg(args, int));
                 break;
             case 's':
-                terminal_output(va_arg(args, char *));
+                puts(va_arg(args, char *));
                 break;
             default:
-                terminal_output((char[3]){'%', *fmt, '\0'});
+                puts((char[3]){'%', *fmt, '\0'});
                 break;
             }
         }
@@ -55,13 +62,13 @@ void printf(const char *fmt, ...)
                 newline();
                 break;
             case '\t':
-                terminal_output("    ");
+                puts("    ");
                 break;
             case '\b':
                 beep(800, 100);
                 break;
             case '\\':
-                terminal_output("\\");
+                puts("\\");
                 break;
             default:
                 if (*fmt != '%' && *fmt != '\\')
