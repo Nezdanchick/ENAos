@@ -16,8 +16,11 @@ extern start64	; 64 bit entry point
 
 section .text
 bits 32
+
 start:
 	mov esp, stack_top				; setup stack
+	push ebx	; multiboot 
+	push eax
 
 	call check_multiboot
 	call check_cpuid
