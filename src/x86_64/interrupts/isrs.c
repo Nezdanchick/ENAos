@@ -1,6 +1,6 @@
 #include <interrupts.h>
-#include <screen.h>
 #include <stddef.h>
+#include <panic.h>
 
 irq_handler *irq_handlers[256] = {0};
 
@@ -16,6 +16,8 @@ void handle_interrupt(uint8_t interrupt, uint64_t error_code, cpu_context_t *con
         exception_handler *handler = exception_handlers[interrupt];
         if (handler != NULL)
             handler(context, error_code);
+        else
+            panic("EXCEPTION %d ERROR CODE %d", interrupt, error_code);
     }
     else
     {

@@ -13,11 +13,14 @@ __attribute__((noreturn)) void panic(const char *error, ...)
 
     terminal_clear();
     screen_set_color(SCREEN_COLOR_RED, SCREEN_COLOR_BLACK);
-    terminal_setpos((terminal_x - strlen(error)) / 2, terminal_y / 2);
+    int msglen = strlen(error);
+    terminal_setpos((terminal_x - msglen % terminal_x) / 2, (terminal_y - msglen / terminal_x) / 2);
     vprintf(error, args);
     disable_cursor();
 
     va_end(args);
+    
+    asm("cli");
 halt:
     asm("hlt");
     goto halt;
