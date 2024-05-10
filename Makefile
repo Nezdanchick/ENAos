@@ -1,5 +1,6 @@
 ARCH:=x86_64
-RUNNER:=qemu-system-$(ARCH) --no-reboot -audiodev pa,id=speaker -machine pcspk-audiodev=speaker -serial stdio
+RUNNER:=qemu-system-$(ARCH) -no-reboot -audiodev pa,id=speaker -machine pcspk-audiodev=speaker \
+-serial stdio -M smm=off --d int
 
 KERNEL=./bin/$(ARCH)-kernel
 ISO=./bin/nandos.iso

@@ -3,6 +3,7 @@ global check_longmode
 
 section .text
 bits 32
+
 check_cpuid:
 	pushfd				; flags => stack
 	pop eax

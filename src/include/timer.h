@@ -3,7 +3,7 @@
 #include <stddef.h>
 
 // how often the timer fires in nanoseconds
-#define TIMER_STEP 500
+#define TIMER_STEP 10000
 
 extern void timer_init();
 extern void sleep_ns(size_t nanoseconds);

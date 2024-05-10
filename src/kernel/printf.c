@@ -5,14 +5,6 @@
 #include <pcspeaker.h>
 #include <serial.h>
 
-void newline()
-{
-    terminal_setpos(0, terminal_getpos() / terminal_x + 1);
-}
-void carriage_return()
-{
-    terminal_setpos(0, terminal_getpos() / terminal_x);
-}
 void putchar(char character)
 {
     putserial(character);

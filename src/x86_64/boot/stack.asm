@@ -3,6 +3,6 @@ global stack_bottom
 
 section .bss
 align 16
-stack_bottom
+stack_bottom:
 	resb 1024*32
-stack_top
+stack_top:

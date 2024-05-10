@@ -25,8 +25,8 @@ extern void set_getpos(getpos *func);
 extern void set_setpos(setpos *func);
 extern void set_clear(clear *func);
 
-extern void newline();
-extern void carriage_return();
+#define newline() terminal_setpos(0, terminal_getpos() / terminal_x + 1);
+#define carriage_return() terminal_setpos(0, terminal_getpos() / terminal_x);
 
 extern void printf(const char *fmt, ...);
 extern void vprintf(const char *fmt, va_list args);

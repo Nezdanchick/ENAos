@@ -49,7 +49,7 @@ char *gets(char *string)
         case 0:
             break;
         case Backspace:
-            if (address != string)
+            if (address < string)
             {
                 backspace();
                 *string-- = '\0';
