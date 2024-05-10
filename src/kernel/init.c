@@ -29,5 +29,7 @@ void init(uint64_t multiboot_addr, uint64_t multiboot_magic)
             break;
         }
     }
+    fb_init(fbtag);
+    
     terminal_clear();
 }
