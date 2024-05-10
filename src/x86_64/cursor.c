@@ -1,6 +1,6 @@
 #include <cursor.h>
-#include <asm.h>
 #include <screen.h>
+#include <io.h>
 
 void enable_cursor()
 {

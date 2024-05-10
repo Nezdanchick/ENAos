@@ -1,4 +1,5 @@
-#include <interrupts.h>
+#include <interrupts/isrs.h>
+#include <interrupts/pic.h>
 #include <stddef.h>
 #include <panic.h>
 

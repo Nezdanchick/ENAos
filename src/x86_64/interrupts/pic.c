@@ -1,5 +1,5 @@
 #include <interrupts/pic.h>
-#include <asm.h>
+#include <io.h>
 
 void pic_init(void)
 {

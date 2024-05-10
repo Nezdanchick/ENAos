@@ -1,4 +1,5 @@
 #include <framebuffer.h>
+#include <stddef.h>
 #include <stdio.h>
 
 #define MAX_RESOLUTION (1920 * 1080)

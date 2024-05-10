@@ -1,9 +1,9 @@
 #include <keyboard.h>
-#include <asm.h>
-#include <memory.h>
-#include <interrupts.h>
-#include <timer.h>
 #include <stdio.h>
+#include <interrupts.h>
+#include <memory.h>
+#include <timer.h>
+#include <io.h>
 
 #define KB_BUFFER_SIZE 128
 

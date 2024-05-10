@@ -1,7 +1,7 @@
 #include <timer.h>
-#include <interrupts.h>
-#include <asm.h>
 #include <stdbool.h>
+#include <interrupts.h>
+#include <io.h>
 
 volatile size_t timer_ns = 0;
 static size_t timer_step = 0;

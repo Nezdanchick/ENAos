@@ -1,4 +1,5 @@
-#include <interrupts.h>
+#include <interrupts/idt.h>
+#include <stdint.h>
 #include <stdbool.h>
 
 #define KERNEL_CODE_SEGMENT_SELECTOR 0x08

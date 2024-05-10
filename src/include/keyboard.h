@@ -1,4 +1,5 @@
 #pragma once
+
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -22,7 +23,8 @@ enum Key
     Backspace = 0x0E,
 };
 
-typedef struct {
+typedef struct
+{
     bool shift : 1;
     bool alt : 1;
     bool ctrl : 1;

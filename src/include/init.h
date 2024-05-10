@@ -12,7 +12,7 @@
 #include <memory.h>
 
 // device
-#include <asm.h>
+#include <io.h>
 #include <pci.h>
 #include <serial.h>
 #include <pcspeaker.h>

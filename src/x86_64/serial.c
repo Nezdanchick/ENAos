@@ -1,5 +1,5 @@
 #include <serial.h>
-#include <asm.h>
+#include <io.h>
 
 int serialport;
 

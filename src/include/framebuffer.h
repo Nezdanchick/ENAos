@@ -1,7 +1,6 @@
 #pragma once
 
 #include <stdint.h>
-#include <stddef.h>
 #include <multiboot2.h>
 
 extern struct multiboot_tag_framebuffer *fb;

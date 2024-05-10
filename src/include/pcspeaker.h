@@ -4,4 +4,4 @@
 
 extern void play_sound(uint32_t frequence);
 extern void mute();
-extern void beep(int frequence, int length);
+extern void beep(uint32_t frequence, uint32_t length);
