@@ -23,11 +23,8 @@ void puts(char *string)
     serial_write(string);
     terminal_output(string);
 }
-void printf(const char *fmt, ...)
+void vprintf(const char *fmt, va_list args)
 {
-    va_list args;
-    va_start(args, fmt);
-
     for (char prev_char = '\0'; *fmt != '\0'; ++fmt)
     {
         if (prev_char == '%')
@@ -78,6 +75,4 @@ void printf(const char *fmt, ...)
         }
         prev_char = *fmt;
     }
-
-    va_end(args);
 }

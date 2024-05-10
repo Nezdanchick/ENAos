@@ -1,4 +1,4 @@
 #pragma once
 
-__attribute__((noreturn))
-extern void panic(char *error, ...);
+__attribute__((noreturn)) // halt
+extern void panic(const char *error, ...);
