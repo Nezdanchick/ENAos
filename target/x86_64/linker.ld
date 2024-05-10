@@ -4,6 +4,8 @@ ENTRY(start)
 
 SECTIONS
 {
+	kernel_start = .;
+	
 	.multiboot :
 	{
 		KEEP(*(.multiboot_header))
@@ -20,4 +22,6 @@ SECTIONS
 	{
 		KEEP(*(.bss))
 	}
+
+	kernel_end = .;
 }
