@@ -29,13 +29,23 @@ args_error:
     printf("Too few arguments. The command needs %d arguments.\n", count);
     return NULL;
 }
+void video_test()
+{
+    int h = fb->common.framebuffer_height;
+    int w = fb->common.framebuffer_width;
+    for (int j = 0; j < h; j++)
+    {
+        for (int i = 0; i < w; i++)
+        {
+            put_pixel(i, j, (((w - i) * (h - j)) & (i * (h - j)) & ((w - i) * j)) | (i * j));
+        }
+    }
+}
 void main()
 {
     printf("Welcome to nandos!\n");
-
-    printf("Kernel start: 0x%x, end: 0x%x, length: %d\n",
-           kernel_start, kernel_end, kernel_end - kernel_start);
     char input_buffer[128];
+    static void *ptr;
     while (true)
     {
         memset(input_buffer, 0, 128);
@@ -54,12 +64,15 @@ void main()
                 "exit - qemu shutdown\n"
                 "pci(bus, slot, func) - show pci info\n"
                 "lspci - show all pci devices\n"
+                "test - show test image on display\n"
                 "video - show display info\n"
                 "### Info ###\n"
                 "func(a, b, c) means the number and purpose of arguments.\n"
                 "Arguments should be entered without parentheses and separated by a space.\n");
         else if (strcmp(input_buffer, "about"))
             printf("Welcome to nandos!\n");
+        else if (strncmp(input_buffer, "addr", 4))
+            printf("Phys: 0x%x\n", addr_virt_to_phys(atoi(&input_buffer[5])));
         else if (strncmp(input_buffer, "add", 3))
         {
             char **args = get_args(input_buffer, 4, ' ', 2);
@@ -78,6 +91,11 @@ void main()
             terminal_clear();
         else if (strncmp(input_buffer, "echo", 4))
             fb_put_string(&input_buffer[5], 0, 0, 0xffffff);
+        else if (strcmp(input_buffer, "test"))
+        {
+            terminal_clear();
+            video_test();
+        }
         else if (strncmp(input_buffer, "error", 5))
             panic(&input_buffer[6]);
         else if (strcmp(input_buffer, "exit"))
@@ -100,6 +118,15 @@ void main()
         }
         else if (strcmp(input_buffer, "lspci"))
             show_pci_devices();
+        else if (strncmp(input_buffer, "malloc", 6))
+        {
+            ptr = malloc(atoi(&input_buffer[7]));
+            memory_block_info(ptr);
+        }
+        else if (strcmp(input_buffer, "free"))
+        {
+            free(ptr);
+        }
         else if (strcmp(input_buffer, "video"))
             printf("Display %dx%d at 0x%x\n",
                    fb->common.framebuffer_width, fb->common.framebuffer_height, fb->common.framebuffer_addr);

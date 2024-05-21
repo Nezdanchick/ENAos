@@ -10,6 +10,8 @@
 
 // memory
 #include <memory.h>
+#include <mmu/pmm.h>
+#include <mmu/vmm.h>
 
 // device
 #include <io.h>
@@ -18,7 +20,9 @@
 #include <pcspeaker.h>
 
 // print
+#include <cursor.h>
 #include <screen.h>
+#include <fb_terminal.h>
 #include <panic.h>
 
 // interrupts
@@ -29,7 +33,3 @@
 // multiboot2
 #include <multiboot2.h>
 #include <framebuffer.h>
-
-extern uint64_t kernel_start;
-extern uint64_t kernel_end;
-void init(uint64_t multiboot_addr, uint64_t multiboot_magic);
