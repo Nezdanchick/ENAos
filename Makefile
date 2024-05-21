@@ -1,5 +1,7 @@
 ARCH:=x86_64
-RUNNER:=qemu-system-$(ARCH) -no-reboot -no-shutdown -audiodev pa,id=speaker -machine pcspk-audiodev=speaker \
+RUNNER:=qemu-system-$(ARCH) -no-reboot -no-shutdown \
+-audiodev pa,id=speaker -machine pcspk-audiodev=speaker \
+-vga qxl \
 -serial stdio -M smm=off --d int
 
 KERNEL=./bin/$(ARCH)-kernel
@@ -41,7 +43,7 @@ create-iso: build
 	--fonts="unicode" \
 	--locales="" \
 	--themes="" \
-	--install-modules="multiboot2 normal all_video \
+	--install-modules="multiboot2 normal all_video font gfxterm \
 	part_acorn part_amiga part_apple part_bsd part_dfly \
 	part_dvh part_gpt part_plan part_sun part_sunpc" \
 
