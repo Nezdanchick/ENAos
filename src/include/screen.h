@@ -3,11 +3,6 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#define SCREEN_SIZE_X 80
-#define SCREEN_SIZE_Y 25
-#define SCREEN_SIZE SCREEN_SIZE_X * SCREEN_SIZE_Y
-
-
 enum uint8_t {
     SCREEN_COLOR_BLACK,
     SCREEN_COLOR_BLUE,
@@ -28,11 +23,3 @@ enum uint8_t {
 };
 
 extern void screen_init();
-
-extern void screen_clear();
-extern void screen_set_color(uint8_t foreground, uint8_t background);
-extern void screen_write(char *string);
-
-extern int screen_get_position();
-extern void set_position(int collumn, int row);
-extern void set_position_to(int position);

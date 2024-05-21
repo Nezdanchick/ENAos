@@ -11,15 +11,17 @@ __attribute__((noreturn)) void panic(const char *error, ...)
     va_list args;
     va_start(args, error);
 
+    const char *p = "PANIC: ";
+
     terminal_clear();
-    screen_set_color(SCREEN_COLOR_RED, SCREEN_COLOR_BLACK);
-    int msglen = strlen(error);
-    terminal_setpos((terminal_x - msglen % terminal_x) / 2, (terminal_y - msglen / terminal_x) / 2);
+    int msglen = strlen(error) + strlen(p);
+    terminal_setpos((terminal_width - msglen % terminal_width) / 2, (terminal_height - msglen / terminal_width) / 2);
+    printf(p);
     vprintf(error, args);
-    disable_cursor();
+    cursor_disable();
 
     va_end(args);
-    
+
     asm("cli");
 halt:
     asm("hlt");

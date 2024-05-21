@@ -45,10 +45,14 @@ void vprintf(const char *fmt, va_list args)
             switch (*fmt)
             {
             case '\r':
-                carriage_return();
+                terminal_x = 0;
+                putserial('\r');
                 break;
             case '\n':
-                newline();
+                terminal_x = 0;
+                terminal_y++;
+                terminal_check_position();
+                putserial('\n');
                 break;
             case '\t':
                 puts("    ");

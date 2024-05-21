@@ -3,39 +3,64 @@
 #include <keyboard.h>
 #include <timer.h>
 
-int terminal_x = 80;
-int terminal_y = 25;
+int terminal_x = 0;
+int terminal_y = 0;
+int terminal_width = 80;
+int terminal_height = 25;
 
-stdout *terminal_output;
-getpos *terminal_getpos;
-setpos *terminal_setpos;
+backspace *terminal_backspace;
 clear *terminal_clear;
+scroll *terminal_scroll;
+stdout *terminal_output;
+setpos *cursor_setpos;
 
+// set std functions
+void set_backspace(backspace *func)
+{
+    terminal_backspace = func;
+}
 void set_stdout(stdout *func)
 {
     terminal_output = func;
 }
-void set_getpos(getpos *func)
+void set_cursor_setpos(setpos *func)
 {
-    terminal_getpos = func;
+    cursor_setpos = func;
 }
-void set_setpos(setpos *func)
+void set_scroll(scroll *func)
 {
-    terminal_setpos = func;
+    terminal_scroll = func;
 }
 void set_clear(clear *func)
 {
     terminal_clear = func;
 }
-void backspace()
+
+// terminal positioning functions
+int terminal_getpos()
 {
-    int pos = terminal_getpos() - 1;
-    int x = pos % terminal_x;
-    int y = pos / terminal_x;
-    terminal_setpos(x, y);
-    putchar(' ');
-    terminal_setpos(x, y);
+    terminal_check_position();
+    return terminal_x + terminal_y * terminal_width;
 }
+void terminal_check_position()
+{
+    if (terminal_x > terminal_width)
+    {
+        terminal_y += terminal_x / terminal_width;
+        terminal_x = terminal_x % terminal_width;
+    }
+    if (terminal_y >= terminal_height)
+        terminal_scroll();
+    cursor_setpos(terminal_x, terminal_y);
+}
+void terminal_setpos(int collumn, int row)
+{
+    terminal_x = collumn;
+    terminal_y = row;
+    terminal_check_position();
+}
+
+// terminal input
 char *gets(char *string)
 {
     char *address = string;
@@ -51,7 +76,7 @@ char *gets(char *string)
         case Backspace:
             if (address < string)
             {
-                backspace();
+                terminal_backspace();
                 *string-- = '\0';
             }
             break;
@@ -65,10 +90,15 @@ char *gets(char *string)
             break;
         }
     }
-    newline(); // after Enter pressed
+    // after Enter pressed
+    terminal_x = 0;
+    terminal_y++;
+    terminal_check_position();
     *string = '\0';
     return string;
 }
+
+// terminal output
 void printf(const char *fmt, ...)
 {
     va_list args;

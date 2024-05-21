@@ -4,76 +4,65 @@
 #include <cursor.h>
 #include <stdio.h>
 
-void *video_text = (void *)0xb8000;
+#define SCREEN_SIZE 2000
+
+void *video_text = (void*)0xb8000;;
 char black_screen[SCREEN_SIZE];
 
-uint8_t x = 0;
-uint8_t y = 0;
 uint8_t color = SCREEN_COLOR_WHITE | SCREEN_COLOR_BLACK << 4;
+
+void screen_backspace();
+void screen_clear();
+void screen_scroll();
+void screen_write(char *string);
 
 void screen_init()
 {
     memset(black_screen, ' ', SCREEN_SIZE);
 
     screen_clear();
-    set_stdout(screen_write);
-    set_getpos(screen_get_position);
-    set_setpos(set_position);
+    set_backspace(screen_backspace);
     set_clear(screen_clear);
+    set_scroll(screen_scroll);
+    set_stdout(screen_write);
+    set_cursor_setpos(cursor_set);
 
-    terminal_x = 80;
-    terminal_y = 25;
+    terminal_width = 80;
+    terminal_height = 25;
 
-    enable_cursor();
+    cursor_init();
 }
-int screen_get_position()
+void screen_backspace()
 {
-    return x + y * SCREEN_SIZE_X;
-}
-void screen_scroll()
-{
-    for (int i = SCREEN_SIZE_X * 2; i < SCREEN_SIZE * 2; i++)
-        *((char *)video_text + i - SCREEN_SIZE_X * 2) = *((char *)video_text + i);
-    for (int i = (SCREEN_SIZE - SCREEN_SIZE_X); i < SCREEN_SIZE; i++)
-        *((char *)video_text + i * 2) = 0;
-    y = SCREEN_SIZE_Y - 1;
-}
-void screen_check_position()
-{
-    if (x > SCREEN_SIZE_X)
-    {
-        y += x / SCREEN_SIZE_X;
-        x = x % SCREEN_SIZE_X;
-    }
-    if (y >= SCREEN_SIZE_Y)
-        screen_scroll();
-    update_cursor(x, y);
-}
-void set_position_to(int position)
-{
-    x = position;
-    screen_check_position();
-}
-void set_position(int collumn, int row)
-{
-    x = collumn;
-    y = row;
-    screen_check_position();
+    terminal_x--;
+    terminal_check_position();
+    putchar(' ');
+    terminal_x--;
+    terminal_check_position();
 }
 void screen_clear()
 {
-    x = 0;
-    y = 0;
+    terminal_x = 0;
+    terminal_y = 0;
     strext(video_text, black_screen, color);
-    update_cursor(x, y);
+    cursor_set(0, 0);
 }
-void screen_set_color(uint8_t foreground, uint8_t background)
+void screen_scroll()
 {
-    color = foreground | background << 4;
+    for (int i = terminal_width * 2; i < SCREEN_SIZE * 2; i++)  // scroll all rows
+        *((char *)video_text + i - terminal_width * 2) = *((char *)video_text + i);
+    for (int i = (SCREEN_SIZE - terminal_width); i < SCREEN_SIZE; i++)  // clear last row
+        *((char *)video_text + i * 2) = 0;
+    terminal_y = terminal_height - 1;
 }
 void screen_write(char *string)
 {
-    strext((video_text + screen_get_position() * 2), string, color);
-    x += strlen(string);
-    screen_check_position();
+    strext((video_text + terminal_getpos() * 2), string, color);
+    terminal_x += strlen(string);
+    terminal_check_position();
+}
+// additional
+void screen_set_color(uint8_t foreground, uint8_t background)
+{
+    color = foreground | background << 4;
 }
