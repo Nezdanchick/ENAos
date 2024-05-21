@@ -90,7 +90,7 @@ void main()
         else if (strcmp(input_buffer, "clear"))
             terminal_clear();
         else if (strncmp(input_buffer, "echo", 4))
-            fb_put_string(&input_buffer[5], 0, 0, 0xffffff);
+            printf("%s\n", &input_buffer[5]);
         else if (strcmp(input_buffer, "test"))
         {
             terminal_clear();
