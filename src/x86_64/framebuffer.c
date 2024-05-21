@@ -1,50 +1,46 @@
 #include <framebuffer.h>
+#include <mmu/vmm.h>
 #include <stddef.h>
 #include <stdio.h>
-
-#define MAX_RESOLUTION (1920 * 1080)
 
 extern uint64_t font[256];
 
 struct multiboot_tag_framebuffer *fb;
-uint32_t width = 0;
-uint32_t height = 0;
+
 uint32_t *video_fb = (void *)NULL;
+uint32_t width_fb = 0;
+uint32_t height_fb = 0;
+uint32_t size_fb = 0;
 
 void fb_init(struct multiboot_tag_framebuffer *fbtag)
 {
     fb = fbtag;
-    width = fbtag->common.framebuffer_width;
-    height = fbtag->common.framebuffer_height;
     video_fb = (uint32_t *)fbtag->common.framebuffer_addr;
+    width_fb = fbtag->common.framebuffer_width;
+    height_fb = fbtag->common.framebuffer_height;
+    size_fb = width_fb * height_fb;
 
-    // set_stdout(screen_write);
-    // set_getpos(get_position);
-    // set_setpos(set_position);
-    // set_clear(screen_clear);
-
-    // terminal_x = width / 8;
-    // terminal_y = height / 16;
+    recursive_map((uint64_t)video_fb, (uint64_t)video_fb, width_fb * height_fb * sizeof(uint32_t));
 }
 void put_pixel(uint32_t x, uint32_t y, uint32_t color)
 {
-    if (x < 0 || width <= x || y < 0 || height <= y)
+    if (width_fb <= x || height_fb <= y)
         return;
 
-    *(video_fb + width * y + x) = color;
+    video_fb[width_fb * y + x] = color;
 }
 void fill_rect(uint32_t x, uint32_t y, int32_t w, int32_t h, uint32_t color)
 {
-    uint32_t i = width * (y - 1);
+    uint32_t i = width_fb * (y - 1);
 
     // test if the rectangle will be clipped (will it be fully in the screen or partially)
-    if (x >= 0 && x + w < width && y >= 0 && y + h < height)
+    if (x + w < width_fb && y + h < height_fb)
     {
         // fully drawn
         i += x + w;
         for (int32_t yy = h; yy > 0; yy--)
         {
-            i += width - w;
+            i += width_fb - w;
             for (int32_t xx = w; xx > 0; xx--)
             {
                 video_fb[i++] = color;
@@ -56,10 +52,10 @@ void fill_rect(uint32_t x, uint32_t y, int32_t w, int32_t h, uint32_t color)
         // clipped
         for (uint32_t yy = y; yy < y + h; yy++)
         {
-            i += width;
+            i += width_fb;
             for (uint32_t xx = x; xx < x + w; xx++)
             {
-                if (xx >= 0 && xx < width && yy >= 0 && yy < height)
+                if (xx < width_fb && yy < height_fb)
                     video_fb[i + xx] = color;
             }
         }
@@ -71,16 +67,16 @@ void put_char(char ch, uint32_t x, uint32_t y, uint32_t color)
     uint64_t bCh = font[(int)ch];
 
     // check if it will be drawn off screen
-    if (x + 8 < 0 || x > width || y + 8 < 0 || y > height)
+    if (x > width_fb || y > height_fb)
         return;
 
     // test if the charactor will be clipped (will it be fully in the screen or partially)
-    if (x >= 0 && x + 8 < width && y >= 0 && y + 8 < height)
+    if (x + 8 < width_fb && y + 8 < height_fb)
     {
         // fully in the screen - pre calculate some of the values
         // so there is less going on in the loop
-        int32_t i = width * (y - 1) + x + 8;
-        int32_t incAmount = width - 8;
+        int32_t i = width_fb * (y - 1) + x + 8;
+        int32_t incAmount = width_fb - 8;
         for (int32_t yy = 7; yy >= 0; yy--)
         {
             i += incAmount;
@@ -99,10 +95,10 @@ void put_char(char ch, uint32_t x, uint32_t y, uint32_t color)
     {
         // partially in the screen
         uint32_t xpos = 0;
-        uint32_t i = width * (y - 1);
+        uint32_t i = width_fb * (y - 1);
         for (int32_t yy = 0; yy < 8; yy++)
         {
-            i += width;
+            i += width_fb;
             xpos = x;
             for (int32_t xx = 7; xx >= 0; xx--)
             {
@@ -110,7 +106,7 @@ void put_char(char ch, uint32_t x, uint32_t y, uint32_t color)
                 if ((bCh >> px++) & 1)
                 {
                     // test if the pixel will be off screen
-                    if (xpos > 0 && xpos < width && yy + y > 0 && yy + y < height)
+                    if (xpos > 0 && xpos < width_fb && yy + y > 0 && yy + y < height_fb)
                         video_fb[i + xpos] = color;
                 }
                 xpos++;
