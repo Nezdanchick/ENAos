@@ -33,3 +33,8 @@ uint32_t inl(uint16_t port)
     asm("inl %1, %0" : "=a"(result) : "Nd"(port));
     return result;
 }
+// wait
+void io_wait(void)
+{
+    outb(0x80, 0);
+}
