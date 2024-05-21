@@ -22,7 +22,7 @@ LD=ld.lld
 AS=nasm
 
 CC_FLAGS=-c -I./src/include/ -O3 -ffreestanding -fno-builtin -nostdlib \
--mno-red-zone -mcmodel=kernel -Wall -Wextra -fno-pic #-target $(ARCH)-unknown-none
+-mno-red-zone -mcmodel=kernel -Wall -Wextra -fno-pic -target $(ARCH)-unknown-none
 LD_FLAGS=-o $(KERNEL) -T ./target/$(ARCH)/linker.ld -nostdlib -no-pie
 AS_FLAGS=-felf64
 
