@@ -26,16 +26,13 @@ typedef struct
 } memory_block_t;
 
 uint8_t heap[HEAP_SIZE] = {0};
-uint64_t heap_start;
 uint64_t heap_pointer;
 memory_block_t *first_block;
 memory_block_t *last_block;
 
 void pmm_init()
 {
-    heap_start = (uint64_t)heap;
-
-    first_block = (void *)heap_start;
+    first_block = (void *)heap;
     CLEAR_BLOCK_INFO(first_block);
     first_block->flag = VALID_FLAG | USAGE_FLAG;
 
@@ -94,8 +91,8 @@ void *malloc(uint64_t size)
     }
     // create new block
     {
-        if (HEAP_SIZE < (heap_pointer - heap_start) + size + sizeof(memory_block_t))
-            panic("pmm: No free space in heap to allocate 0x%x/0x%x", (heap_pointer - heap_start), HEAP_SIZE);
+        if (HEAP_SIZE - (heap_pointer - ((uint64_t)first_block) + size + sizeof(memory_block_t)) < 0)
+            panic("pmm: No free space in heap to allocate 0x%x/0x%x", (heap_pointer - (uint64_t)first_block) + size + sizeof(memory_block_t), HEAP_SIZE);
 
         block = (void *)heap_pointer;
         printf("Match block at 0x%x\n", heap_pointer);
@@ -133,13 +130,10 @@ void *allocate(uint64_t size, uint64_t allign)
     uint64_t need = heap_pointer % allign;
     uint8_t size_of_info = sizeof(memory_block_t) * 2;
 
-    if (need < size_of_info)
-        need = allign - need - size_of_info;
-    else
-        need -= size_of_info;
+    need = allign - need - size_of_info;
 
     void *free_block = malloc(need);
-    void * ptr = malloc(size);
+    void *ptr = malloc(size);
     free(free_block);
     return ptr;
 }
