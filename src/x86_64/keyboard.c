@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <interrupts.h>
 #include <memory.h>
-#include <timer.h>
 #include <io.h>
 
 #define KB_BUFFER_SIZE 128
@@ -45,10 +44,14 @@ bool is_key_printable(keyboard_key_t key)
 {
     return kb_keys[key.scancode] != '?';
 }
+bool is_key_letter(keyboard_key_t key)
+{
+    return kb_keys[key.scancode] >= 'a' && kb_keys[key.scancode] <= 'z';
+}
 keyboard_key_t keyboard_input()
 {
     key_scancode = 0;
-    sleep_ms(10);
+    io_wait();
 
     keyboard_key_t key = (keyboard_key_t){0};
 
@@ -63,7 +66,12 @@ keyboard_key_t keyboard_input()
     key.pressed = is_key_pressed((enum Key)key_scancode);
     
     if (is_key_printable(key))
-        key.character = kb_keys[key_scancode];
+    {
+        if (is_key_letter(key) && key.shift)
+            key.character = kb_keys[key_scancode] + 'A' - 'a';
+        else
+            key.character = kb_keys[key_scancode];
+    }
     
     if (kb_buffer[key_scancode] == KEY_RELEASED)
         kb_buffer[key_scancode] = 0;
