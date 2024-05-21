@@ -11,6 +11,8 @@ extern gdt64.code_segment
 ; paging.asm
 extern setup_page_tables
 extern enable_paging
+; fpu.asm
+extern enable_fpu
 
 extern start64	; 64 bit entry point
 
@@ -28,6 +30,7 @@ start:
 
 	call setup_page_tables
 	call enable_paging
+	call enable_fpu
 
 	lgdt [gdt64.pointer]			; setup gdt64
 	jmp gdt64.code_segment:start64	; long jump
