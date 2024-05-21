@@ -1,3 +1,8 @@
+global page_table_l4
+global page_table_l3
+global page_table_l2
+global page_table_l1
+
 global setup_page_tables
 global enable_paging
 
@@ -10,18 +15,21 @@ setup_page_tables:
 	mov [page_table_l4], eax
 
 	mov eax, page_table_l2
-	or eax, 0b11	; present, writable
+	or eax, 0b11	; present, writable]
 	mov [page_table_l3], eax
 
-	mov ecx, 0	; counter
-.loop:
-	mov eax, 0x200000	; 2MiB
-	mul ecx
-	or eax, 0b10000011	; present, writable, huge page
-	mov [page_table_l2 + ecx * 8], eax
+	mov eax, page_table_l1
+	or eax, 0b11	; present, writable]
+	mov [page_table_l2], eax
 
-	inc ecx
-	cmp ecx, 512	; if whole table mapped
+	mov ecx, 0		; counter
+	mov eax, 0b11	; present, writable
+.loop:
+	mov [page_table_l1 + ecx], eax
+
+	add eax, 0x1000	; 4KiB
+	add ecx, 8
+	cmp ecx, 0x1000	; if whole table mapped
 	jne .loop
 	ret
 
@@ -53,4 +61,6 @@ page_table_l4:
 page_table_l3:
 	resb 4096
 page_table_l2:
+	resb 4096
+page_table_l1:
 	resb 4096
