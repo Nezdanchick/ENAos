@@ -36,7 +36,7 @@ void screen_backspace()
 {
     terminal_x--;
     terminal_check_position();
-    putchar(' ');
+    printf(" ");
     terminal_x--;
     terminal_check_position();
 }
