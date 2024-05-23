@@ -44,7 +44,7 @@ int terminal_getpos()
 }
 void terminal_check_position()
 {
-    if (terminal_x > terminal_width)
+    if (terminal_x >= terminal_width)
     {
         terminal_y += terminal_x / terminal_width;
         terminal_x = terminal_x % terminal_width;
@@ -84,7 +84,7 @@ char *gets(char *string)
         default:
             if (is_key_printable(key))
             {
-                putchar(key.character);
+                printf("%c", key.character);
                 *string++ = key.character;
             }
             break;
