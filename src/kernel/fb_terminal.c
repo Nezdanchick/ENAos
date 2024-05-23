@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <string.h>
 
-#define CHARACTER_HEIGHT 8
+#define CHARACTER_HEIGHT 10
 #define CHARACTER_WIDTH 8
 
 extern uint32_t *video_fb;
@@ -32,8 +32,8 @@ void fb_terminal_init()
     // set_cursor_setpos(fb_set_position);
     set_scroll(fb_scroll);
 
-    terminal_width = fb->common.framebuffer_width / 8;
-    terminal_height = fb->common.framebuffer_height / 8;
+    terminal_width = fb->common.framebuffer_width / CHARACTER_WIDTH;
+    terminal_height = fb->common.framebuffer_height / CHARACTER_HEIGHT;
 }
 void fb_backspace()
 {
@@ -64,7 +64,7 @@ void fb_set_color(uint32_t color)
 }
 void fb_write(char *string)
 {
-    fb_put_string(string, terminal_x * 8, terminal_y * 8, fb_terminal_color);
+    fb_put_string(string, terminal_x * CHARACTER_WIDTH, terminal_y * CHARACTER_HEIGHT, fb_terminal_color);
     terminal_x += strlen(string);
     terminal_check_position();
 }
