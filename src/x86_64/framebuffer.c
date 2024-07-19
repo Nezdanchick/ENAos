@@ -29,7 +29,7 @@ void put_pixel(uint32_t x, uint32_t y, uint32_t color)
 
     video_fb[width_fb * y + x] = color;
 }
-void fill_rect(uint32_t x, uint32_t y, int32_t w, int32_t h, uint32_t color)
+void fb_fill_rect(uint32_t x, uint32_t y, int32_t w, int32_t h, uint32_t color)
 {
     uint32_t i = width_fb * (y - 1);
 
@@ -61,7 +61,7 @@ void fill_rect(uint32_t x, uint32_t y, int32_t w, int32_t h, uint32_t color)
         }
     }
 }
-void put_char(char ch, uint32_t x, uint32_t y, uint32_t color)
+void fb_put_char(char ch, uint32_t x, uint32_t y, uint32_t color)
 {
     uint32_t px = 0; // position in the charactor - an 8x8 font = 64 bits
     uint64_t bCh = font[(int)ch];
@@ -117,7 +117,7 @@ void put_char(char ch, uint32_t x, uint32_t y, uint32_t color)
 void fb_put_string(char *string, int32_t x, int32_t y, uint32_t color)
 {
     for (uint32_t i = 0; string[i] != 0; i++, x += 8)
-        put_char(string[i], x, y, color);
+        fb_put_char(string[i], x, y, color);
 }
 
 uint64_t font[256] = {

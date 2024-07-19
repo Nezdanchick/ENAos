@@ -11,12 +11,10 @@ __attribute__((noreturn)) void panic(const char *error, ...)
     va_list args;
     va_start(args, error);
 
-    const char *p = "PANIC: ";
+    const char *panic = "PANIC";
 
     terminal_clear();
-    int msglen = strlen(error) + strlen(p);
-    terminal_setpos((terminal_width - msglen % terminal_width) / 2, (terminal_height - msglen / terminal_width) / 2);
-    printf(p);
+    printf("%s\n", panic);
     vprintf(error, args);
     cursor_disable();
 

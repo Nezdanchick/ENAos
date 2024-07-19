@@ -47,7 +47,7 @@ void fb_clear()
 {
     terminal_x = 0;
     terminal_y = 0;
-    fill_rect(0, 0, width_fb, height_fb, fb_bg_color);
+    fb_fill_rect(0, 0, width_fb, height_fb, fb_bg_color);
     terminal_check_position();
 }
 void fb_scroll()
@@ -64,7 +64,10 @@ void fb_set_color(uint32_t color)
 }
 void fb_write(char *string)
 {
-    fb_put_string(string, terminal_x * CHARACTER_WIDTH, terminal_y * CHARACTER_HEIGHT, fb_terminal_color);
-    terminal_x += strlen(string);
-    terminal_check_position();
+    for (; *string != '\0'; string++)
+    {
+        fb_put_char(*string, terminal_x * CHARACTER_WIDTH, terminal_y * CHARACTER_HEIGHT, fb_terminal_color);
+        terminal_x++;
+        terminal_check_position();
+    }
 }
