@@ -1,9 +1,10 @@
 #include <init.h>
 
-static char *args[512] = {0};
 char **get_args(char *string, size_t start, char separator, int count)
 {
-    if (strlen(string) <= start)
+    size_t length = strlen(string);
+    char **args = kmalloc(length);
+    if (length <= start)
         goto args_error;
     string = &string[start];
     int arg_i = 0;
@@ -23,6 +24,7 @@ char **get_args(char *string, size_t start, char separator, int count)
     }
     if (arg_i <= count - 1)
         goto args_error;
+    free(args);
     return args;
 
 args_error:
@@ -41,10 +43,39 @@ void video_test()
         }
     }
 }
+void task_run(void function())
+{
+    function();
+}
+void task1()
+{
+    int i = 0;
+    while (true)
+    {
+        printf("%d", i++ % 10);
+        sleep_ms(10);
+    }
+}
+void task2()
+{
+    char c = 'A';
+    while (true)
+    {
+        printf("%c", c++);
+        if (c > 'Z')
+            c = 'A';
+        sleep_ms(10);
+    }
+}
+extern uint64_t kernel_start;
 void main()
 {
     printf("Welcome to nandos!\n");
-    char input_buffer[128];
+    printf("%x\n", kernel_start);
+    printf("CPU info:\n");
+    detect_cpu();
+
+    char *input_buffer = kmalloc(1024);
     static void *ptr;
     while (true)
     {
@@ -118,9 +149,9 @@ void main()
         }
         else if (strcmp(input_buffer, "lspci"))
             show_pci_devices();
-        else if (strncmp(input_buffer, "malloc", 6))
+        else if (strncmp(input_buffer, "kmalloc", 6))
         {
-            ptr = malloc(atoi(&input_buffer[7]));
+            ptr = kmalloc(atoi(&input_buffer[7]));
             memory_block_info(ptr);
         }
         else if (strcmp(input_buffer, "free"))
@@ -134,5 +165,6 @@ void main()
             printf("Command '%s' not found. Try 'help'\n", input_buffer);
     }
     printf("Goodbye!\n");
+    free(input_buffer);
     outw(0x604, 0x2000); // qemu shutdown
 }

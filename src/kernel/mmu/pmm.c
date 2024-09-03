@@ -7,15 +7,13 @@
 #include <string.h>
 #include <serial.h>
 
-#define HEAP_SIZE (1024 * 256)
-
 #define USAGE_FLAG (1 << 0)    // memory block in use
 #define PREVIOUS_FLAG (1 << 1) // previous pointer isn't null
 #define VALID_FLAG (1 << 7)    // block is valid
 
 // where memory block starts
 #define START_BLOCK(block) ((uint64_t)block + sizeof(memory_block_t))
-#define NEXT_BLOCK(block) (void *)(BLOCK_START(block) + block->size)
+#define NEXT_BLOCK(block) (void *)(START_BLOCK(block) + block->size)
 #define CLEAR_BLOCK_INFO(block) memset((void *)block, 0, sizeof(memory_block_t));
 
 typedef struct
@@ -25,13 +23,25 @@ typedef struct
     uint8_t flag;
 } memory_block_t;
 
-uint8_t heap[HEAP_SIZE] = {0};
+extern uint64_t page_heap[PAGE_SIZE * 8];
+uint64_t *heap = (void*) 0x100000;  // 1M
 uint64_t heap_pointer;
 memory_block_t *first_block;
 memory_block_t *last_block;
 
 void pmm_init()
 {
+    // pre init before recursive map
+    first_block = (void *)page_heap;
+    CLEAR_BLOCK_INFO(first_block);
+    first_block->flag = VALID_FLAG | USAGE_FLAG;
+
+    last_block = first_block;
+    heap_pointer = START_BLOCK(first_block);
+
+    recursive_map((uint64_t)heap, (uint64_t)heap, 4);
+
+    // init
     first_block = (void *)heap;
     CLEAR_BLOCK_INFO(first_block);
     first_block->flag = VALID_FLAG | USAGE_FLAG;
@@ -39,8 +49,8 @@ void pmm_init()
     last_block = first_block;
     heap_pointer = START_BLOCK(first_block);
 }
-// put memory_block_t info and allocale memory
-void *malloc(uint64_t size)
+// put memory_block_t info and clear memory chunk
+void *kmalloc(uint64_t size)
 {
     if (size == 0)
         return NULL;
@@ -50,7 +60,6 @@ void *malloc(uint64_t size)
     if (last_block->flag & VALID_FLAG && !(last_block->flag & USAGE_FLAG)) // if last block is free skip searching
     {
         block = last_block;
-        printf("Skip searching\n");
         goto skip_create;
     }
 
@@ -59,22 +68,23 @@ void *malloc(uint64_t size)
          free_block->flag & PREVIOUS_FLAG;
          free_block = (memory_block_t *)free_block->previous)
     {
-        printf("Searching block at 0x%x\n", free_block);
         if (free_block->flag & USAGE_FLAG)
             continue;
         if (free_block->size >= size) // free_block was founded
         {
-            printf("Found free block at 0x%x\n", free_block);
-            if (free_block->size > size + sizeof(memory_block_t)) // if can fit other block
+            if (free_block->size == size)
             {
-                block = free_block;                                                                // block is free_block with smaller size
-                memory_block_t *block2 = (void *)(START_BLOCK(free_block) + size);                 // block2 after block
-                memory_block_t *next_block = (void *)(START_BLOCK(free_block) + free_block->size); // next_block after free_block
+                block = free_block;
+            }
+            else if (free_block->size > size + sizeof(memory_block_t)) // if can fit other block
+            {
+                block = free_block;                                                // block is free_block with smaller size
+                memory_block_t *block2 = (void *)(START_BLOCK(free_block) + size); // block2 after block
+                memory_block_t *next_block = NEXT_BLOCK(free_block);               // next_block after free_block
                 CLEAR_BLOCK_INFO(block2);
                 block2->size = free_block->size - size - sizeof(memory_block_t);
                 block2->previous = (uint64_t *)block;
                 block2->flag = VALID_FLAG | PREVIOUS_FLAG;
-                printf("Setup block2 at 0x%x\n", block2);
 
                 if (!(next_block->flag & VALID_FLAG) || last_block == block) // next_block isn't exist
                     last_block = block2;
@@ -82,20 +92,13 @@ void *malloc(uint64_t size)
                     next_block->previous = (uint64_t *)block2;
             }
             else
-            {
-                printf("Block now is free_block\n");
-                block = free_block;
-            }
+                continue;
             goto skip_create;
         }
     }
     // create new block
     {
-        if (HEAP_SIZE - (heap_pointer - ((uint64_t)first_block) + size + sizeof(memory_block_t)) < 0)
-            panic("pmm: No free space in heap to allocate 0x%x/0x%x", (heap_pointer - (uint64_t)first_block) + size + sizeof(memory_block_t), HEAP_SIZE);
-
         block = (void *)heap_pointer;
-        printf("Match block at 0x%x\n", heap_pointer);
 
         heap_pointer += sizeof(memory_block_t);
         if (last_block != block) // recursive block falue
@@ -103,7 +106,6 @@ void *malloc(uint64_t size)
 
         heap_pointer += size;
         last_block = block;
-        printf("Created block at 0x%x\n", START_BLOCK(block));
     }
 skip_create:
     block->size = size;
@@ -119,21 +121,33 @@ void free(void *pointer)
     if (pointer == NULL)
         return;
     memory_block_t *block = pointer - sizeof(memory_block_t);
-    printf("Free block at 0x%x of size 0x%x\n", START_BLOCK(block), block->size);
 
     block->flag &= ~USAGE_FLAG;
+
+    memory_block_t *prev = (memory_block_t *)block->previous;
+
+    if (!(prev->flag & USAGE_FLAG)) // if previos block is free
+    {
+        if (last_block == block)
+        {
+            last_block = prev;
+        }
+        else // in the middle
+        {
+            memory_block_t *next = NEXT_BLOCK(block);
+            next->previous = (uint64_t *)prev;
+        }
+        CLEAR_BLOCK_INFO(block);
+    }
 }
-void *allocate(uint64_t size, uint64_t allign)
+void *page_alloc()
 {
-    if (heap_pointer % allign == 0)
-        return malloc(size);
-    uint64_t need = heap_pointer % allign;
-    uint8_t size_of_info = sizeof(memory_block_t) * 2;
+    if (heap_pointer % PAGE_SIZE == sizeof(memory_block_t))
+        return kmalloc(PAGE_SIZE);
 
-    need = allign - need - size_of_info;
-
-    void *free_block = malloc(need);
-    void *ptr = malloc(size);
+    uint64_t need = PAGE_SIZE - (heap_pointer % PAGE_SIZE) - sizeof(memory_block_t) * 2;
+    void *free_block = kmalloc(need);   // .............| <- allign ......
+    void *ptr = kmalloc(PAGE_SIZE);     // | FREE BLOCK | PAGE BLOCK | ...
     free(free_block);
     return ptr;
 }

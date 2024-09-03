@@ -1,6 +1,7 @@
 ARCH:=x86_64
 RUNNER:=qemu-system-$(ARCH) -no-reboot -no-shutdown \
 -audiodev pa,id=speaker -machine pcspk-audiodev=speaker \
+-machine accel=kvm -cpu host \
 -vga qxl \
 -serial stdio -M smm=off --d int
 

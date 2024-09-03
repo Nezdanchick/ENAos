@@ -6,10 +6,10 @@ void init(uint64_t multiboot_addr, uint64_t multiboot_magic)
     serial_init(COM1);
     interrupts_init();
     asm("sti");
-
+    
     timer_init();
     keyboard_init();
-
+    
     pmm_init();
 
     if (multiboot_magic != MULTIBOOT2_BOOTLOADER_MAGIC)

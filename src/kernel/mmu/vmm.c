@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <panic.h>
 
-#define PAGE_SIZE 4096
+#define HEAP_SIZE 8
 
 #define PAGE_PRESENT (1 << 0)
 #define PAGE_WRITE (1 << 1)
@@ -13,6 +13,8 @@ typedef uint64_t pml4e_t;
 typedef uint64_t pdpte_t;
 typedef uint64_t pde_t;
 typedef uint64_t pte_t;
+
+typedef uint8_t *page_t;
 
 extern pml4e_t page_table_l4[512];
 extern pdpte_t page_table_l3[512];
@@ -33,10 +35,6 @@ uint64_t addr_virt_to_phys(uint64_t virt_addr)
     pte_t *pt = (pte_t *)(pd[pd_idx] & ~0xFFF);
     return phys_addr + pt[pt_idx];
 }
-void *allocate_page()
-{
-    return allocate(PAGE_SIZE, PAGE_SIZE);
-}
 void map_page(uint64_t phys_addr, uint64_t virt_addr)
 {
     uint16_t pml4_idx = (virt_addr >> 39) & 0x1FF;
@@ -48,7 +46,7 @@ void map_page(uint64_t phys_addr, uint64_t virt_addr)
 
     if (!(pml4[pml4_idx] & PAGE_PRESENT))
     {
-        uint64_t *pdpt = allocate_page();
+        uint64_t *pdpt = page_alloc();
         pml4[pml4_idx] = (uint64_t)pdpt | PAGE_PRESENT | PAGE_WRITE;
     }
 
@@ -56,7 +54,7 @@ void map_page(uint64_t phys_addr, uint64_t virt_addr)
 
     if (!(pdpt[pdpt_idx] & PAGE_PRESENT))
     {
-        uint64_t *pd = allocate_page();
+        uint64_t *pd = page_alloc();
         pdpt[pdpt_idx] = (uint64_t)pd | PAGE_PRESENT | PAGE_WRITE;
     }
 
@@ -64,7 +62,7 @@ void map_page(uint64_t phys_addr, uint64_t virt_addr)
 
     if (!(pd[pd_idx] & PAGE_PRESENT))
     {
-        uint64_t *pt = allocate_page();
+        uint64_t *pt = page_alloc();
         pd[pd_idx] = (uint64_t)pt | PAGE_PRESENT | PAGE_WRITE;
     }
 

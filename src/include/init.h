@@ -17,6 +17,7 @@
 #include <io.h>
 #include <pci.h>
 #include <serial.h>
+#include <cpuid.h>
 #include <pcspeaker.h>
 
 // print
@@ -33,3 +34,6 @@
 // multiboot2
 #include <multiboot2.h>
 #include <framebuffer.h>
+
+// task sheduler
+#include <task_sheduler.h>

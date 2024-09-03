@@ -12,16 +12,14 @@ SECTIONS
 	}
 	.text :
 	{
-		KEEP(*(.text))
+		*(.:text)
 	}
 	.data :
 	{
-		KEEP(*(.data))
+		*(.data)
 	}
 	.bss :
 	{
-		KEEP(*(.bss))
+		*(.bss)
 	}
-
-	kernel_end = .;
 }
