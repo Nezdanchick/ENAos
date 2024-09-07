@@ -8,9 +8,9 @@ extern uint64_t font[256];
 struct multiboot_tag_framebuffer *fb;
 
 uint32_t *video_fb = (void *)NULL;
-uint32_t width_fb = 0;
-uint32_t height_fb = 0;
-uint32_t size_fb = 0;
+uint64_t width_fb = 0;
+uint64_t height_fb = 0;
+uint64_t size_fb = 0;
 
 void fb_init(struct multiboot_tag_framebuffer *fbtag)
 {

@@ -1,5 +1,3 @@
-global page_heap
-
 global page_table_l4
 global page_table_l3
 global page_table_l2
@@ -66,6 +64,3 @@ page_table_l2:
 	resb 4096
 page_table_l1:
 	resb 4096
-
-page_heap:
-	resb 4096 * 8

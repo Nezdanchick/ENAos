@@ -2,7 +2,6 @@
 #include <mmu/vmm.h>
 #include <memory.h>
 #include <stdio.h>
-#include <panic.h>
 
 #include <string.h>
 #include <serial.h>
@@ -23,8 +22,8 @@ typedef struct
     uint8_t flag;
 } memory_block_t;
 
-extern uint64_t page_heap[PAGE_SIZE * 8];
-uint64_t *heap = (void*) 0x100000;  // 1M
+uint64_t *init_heap = (void *)0x100000;
+uint64_t *heap = (void *)0x200000;
 uint64_t heap_pointer;
 memory_block_t *first_block;
 memory_block_t *last_block;
@@ -32,14 +31,14 @@ memory_block_t *last_block;
 void pmm_init()
 {
     // pre init before recursive map
-    first_block = (void *)page_heap;
+    first_block = (void *)init_heap;
     CLEAR_BLOCK_INFO(first_block);
     first_block->flag = VALID_FLAG | USAGE_FLAG;
 
     last_block = first_block;
     heap_pointer = START_BLOCK(first_block);
 
-    recursive_map((uint64_t)heap, (uint64_t)heap, 4);
+    recursive_map((uint64_t)heap, (uint64_t)heap, PAGE_SIZE);
 
     // init
     first_block = (void *)heap;
@@ -99,6 +98,7 @@ void *kmalloc(uint64_t size)
     // create new block
     {
         block = (void *)heap_pointer;
+        recursive_map(heap_pointer, heap_pointer, size + PAGE_SIZE);
 
         heap_pointer += sizeof(memory_block_t);
         if (last_block != block) // recursive block falue
@@ -112,9 +112,10 @@ skip_create:
     block->flag = VALID_FLAG | USAGE_FLAG;
     if (block->previous != NULL)
         block->flag |= PREVIOUS_FLAG;
-    memset((void *)(START_BLOCK(block)), 0, size);
+    void *pointer = (void *)(START_BLOCK(block));
+    memset(pointer, 0, size);
 
-    return (void *)(START_BLOCK(block));
+    return pointer;
 }
 void free(void *pointer)
 {
@@ -146,8 +147,8 @@ void *page_alloc()
         return kmalloc(PAGE_SIZE);
 
     uint64_t need = PAGE_SIZE - (heap_pointer % PAGE_SIZE) - sizeof(memory_block_t) * 2;
-    void *free_block = kmalloc(need);   // .............| <- allign ......
-    void *ptr = kmalloc(PAGE_SIZE);     // | FREE BLOCK | PAGE BLOCK | ...
+    void *free_block = kmalloc(need); // .............| <- allign ......
+    void *ptr = kmalloc(PAGE_SIZE);   // | FREE BLOCK | PAGE BLOCK | ...
     free(free_block);
     return ptr;
 }

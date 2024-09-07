@@ -2,15 +2,14 @@
 
 void init(uint64_t multiboot_addr, uint64_t multiboot_magic)
 {
+    pmm_init();
     screen_init();
     serial_init(COM1);
     interrupts_init();
     asm("sti");
-    
+
     timer_init();
     keyboard_init();
-    
-    pmm_init();
 
     if (multiboot_magic != MULTIBOOT2_BOOTLOADER_MAGIC)
         panic("Multiboot2 magic (0x%x) is incorrect\n", multiboot_magic);
@@ -31,6 +30,7 @@ void init(uint64_t multiboot_addr, uint64_t multiboot_magic)
             break;
         }
     }
+
     fb_init(fbtag);
 
     if (fbtag->common.framebuffer_addr != 0xb8000)

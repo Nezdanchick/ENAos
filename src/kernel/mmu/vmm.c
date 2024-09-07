@@ -74,6 +74,8 @@ void map_page(uint64_t phys_addr, uint64_t virt_addr)
 }
 void recursive_map(uint64_t phys_addr, uint64_t virt_addr, uint64_t size)
 {
+    phys_addr &= ~0xFFF;
+    virt_addr &= ~0xFFF;
     for (uint64_t i = 0; i <= size; i += PAGE_SIZE)
         map_page(phys_addr + i, virt_addr + i);
 }

@@ -40,6 +40,7 @@ int detect_cpu(void)
 { /* or main() if your trying to port this as an independant application */
     unsigned long ebx, unused;
     cpuid(0, unused, ebx, unused, unused);
+    printf("CPU info:\n");
     switch (ebx)
     {
     case 0x756e6547: /* Intel Magic Code */

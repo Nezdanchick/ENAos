@@ -71,8 +71,7 @@ extern uint64_t kernel_start;
 void main()
 {
     printf("Welcome to nandos!\n");
-    printf("%x\n", kernel_start);
-    printf("CPU info:\n");
+    printf("Kernel located at %x\n", kernel_start);
     detect_cpu();
 
     char *input_buffer = kmalloc(1024);
@@ -90,6 +89,7 @@ void main()
                 "add(a, b) - do simple math\n"
                 "beep(length) - make a sound\n"
                 "clear - clear screen\n"
+                "cpuid - show CPU info\n"
                 "echo(text) - print text to screen\n"
                 "error(text) - print error message an halt\n"
                 "exit - qemu shutdown\n"
@@ -120,6 +120,8 @@ void main()
         }
         else if (strcmp(input_buffer, "clear"))
             terminal_clear();
+        else if (strcmp(input_buffer, "cpuid"))
+            detect_cpu();
         else if (strncmp(input_buffer, "echo", 4))
             printf("%s\n", &input_buffer[5]);
         else if (strcmp(input_buffer, "test"))
