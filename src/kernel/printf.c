@@ -26,6 +26,9 @@ void vprintf(const char *fmt, va_list args)
             case 'd':
                 puts(itoa(va_arg(args, int), NULL, 10));
                 break;
+            case 'u':
+                puts(itoa(va_arg(args, int), NULL, 10));
+                break;
             case 'x':
                 puts(itoa(va_arg(args, int), NULL, 16));
                 break;
@@ -33,7 +36,21 @@ void vprintf(const char *fmt, va_list args)
                 putchar(va_arg(args, int));
                 break;
             case 's':
-                puts(va_arg(args, char *));
+                vprintf(va_arg(args, char *), args);
+                break;
+            case 'l':
+                switch (*++fmt)
+                {
+                case 'd':
+                    puts(itoa(va_arg(args, int64_t), NULL, 10));
+                    break;
+                case 'u':
+                    puts(itoa(va_arg(args, uint64_t), NULL, 10));
+                    break;
+                case 'x':
+                    puts(itoa(va_arg(args, int64_t), NULL, 16));
+                    break;
+                }
                 break;
             default:
                 puts((char[3]){'%', *fmt, '\0'});

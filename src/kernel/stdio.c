@@ -2,17 +2,24 @@
 #include <stdarg.h>
 #include <keyboard.h>
 #include <timer.h>
+#include <serial.h>
 
 int terminal_x = 0;
 int terminal_y = 0;
 int terminal_width = 80;
 int terminal_height = 25;
 
-backspace *terminal_backspace;
-clear *terminal_clear;
-scroll *terminal_scroll;
-stdout *terminal_output;
-setpos *cursor_setpos;
+void stdio_stub() {serial_write("stdio_stub");}
+void stdio_stub_write(__attribute__((unused)) char *string) {serial_write("stdio_stub_write");}
+void stdio_stub_setpos(
+    __attribute__((unused)) int x,
+    __attribute__((unused)) int y) {serial_write("stdio_stub_setpos");}
+
+backspace *terminal_backspace = stdio_stub;
+clear *terminal_clear = stdio_stub;
+scroll *terminal_scroll = stdio_stub;
+stdout *terminal_output = stdio_stub_write;
+setpos *cursor_setpos = stdio_stub_setpos;
 
 // set std functions
 void set_backspace(backspace *func)
@@ -51,7 +58,6 @@ void terminal_check_position()
     }
     if (terminal_y >= terminal_height)
         terminal_scroll();
-    cursor_setpos(terminal_x, terminal_y);
 }
 void terminal_setpos(int collumn, int row)
 {

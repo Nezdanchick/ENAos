@@ -6,17 +6,14 @@
 #include <cursor.h>
 #include <stdio.h>
 
-__attribute__((noreturn)) void panic(const char *error, ...)
+__attribute__((noreturn)) void _panic(const char *error, ...)
 {
     va_list args;
     va_start(args, error);
-
-    const char *panic = "PANIC";
-
+    
     terminal_clear();
-    printf("%s\n", panic);
+    printf("!!!PANIC!!!\n\n");  // TODO add useful info like registers
     vprintf(error, args);
-    cursor_disable();
 
     va_end(args);
 

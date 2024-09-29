@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <string.h>
+#include <mmu/pmm.h>
 
 #define CHARACTER_HEIGHT 10
 #define CHARACTER_WIDTH 8
@@ -66,8 +67,8 @@ void fb_write(char *string)
 {
     for (; *string != '\0'; string++)
     {
+        terminal_check_position();
         fb_put_char(*string, terminal_x * CHARACTER_WIDTH, terminal_y * CHARACTER_HEIGHT, fb_terminal_color);
         terminal_x++;
-        terminal_check_position();
     }
 }

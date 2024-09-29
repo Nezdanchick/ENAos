@@ -25,6 +25,7 @@
 #include <screen.h>
 #include <fb_terminal.h>
 #include <panic.h>
+#include <shell.h>
 
 // interrupts
 #include <interrupts.h>
@@ -34,6 +35,9 @@
 // multiboot2
 #include <multiboot2.h>
 #include <framebuffer.h>
+
+// fs
+#include <fs/fs.h>
 
 // task sheduler
 #include <task_sheduler.h>

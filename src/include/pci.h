@@ -12,5 +12,5 @@ typedef struct
     uint8_t header_type;
 } pci_device_t;
 
-extern void read_pci_config(uint8_t bus, uint8_t slot, uint8_t func, pci_device_t *device);
+extern void pci_read_config(uint8_t bus, uint8_t slot, uint8_t func, pci_device_t *device);
 extern void show_pci_devices();

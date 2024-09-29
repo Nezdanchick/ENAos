@@ -2,9 +2,11 @@
 
 void init(uint64_t multiboot_addr, uint64_t multiboot_magic)
 {
-    pmm_init();
     screen_init();
     serial_init(COM1);
+    pmm_init();
+    fs_init();
+
     interrupts_init();
     asm("sti");
 
@@ -34,9 +36,5 @@ void init(uint64_t multiboot_addr, uint64_t multiboot_magic)
     fb_init(fbtag);
 
     if (fbtag->common.framebuffer_addr != 0xb8000)
-    {
         fb_terminal_init();
-        cursor_disable();
-    }
-    terminal_clear();
 }

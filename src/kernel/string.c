@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdint.h>
 #include <math.h>
 
 const char NUMERIC_STRING[] = "0123456789abcdefghijklmnopqrstuvwxyz";
@@ -60,7 +61,7 @@ size_t strlen(const char *string)
     return i;
 }
 
-char *itoa(int value, char *str, int base)
+char *itoa(size_t value, char *str, int base)
 {
     char *result;
     char *ptr;
@@ -73,7 +74,7 @@ char *itoa(int value, char *str, int base)
     }
     result = ptr = str;
     // Set '-' for negative decimals.
-    if (value < 0 && base == 10)
+    if ((int64_t)value < 0 && base == 10)
     {
         *ptr++ = '-';
         value = -value;
@@ -81,7 +82,7 @@ char *itoa(int value, char *str, int base)
     start = ptr;
     do
     {
-        *ptr++ = NUMERIC_STRING[abs(value % base)];
+        *ptr++ = NUMERIC_STRING[value % abs(base)];
         value /= base;
     } while (value);
     // Terminating the string.

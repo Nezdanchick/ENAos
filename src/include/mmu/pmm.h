@@ -6,4 +6,3 @@ extern void pmm_init();
 extern void *kmalloc(uint64_t size);
 extern void free(void *pointer);
 extern void *page_alloc();
-extern void memory_block_info(void *pointer);

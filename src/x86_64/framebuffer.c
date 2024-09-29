@@ -3,11 +3,11 @@
 #include <stddef.h>
 #include <stdio.h>
 
-extern uint64_t font[256];
+uint64_t font[256];
 
 struct multiboot_tag_framebuffer *fb;
 
-uint32_t *video_fb = (void *)NULL;
+uint64_t video_fb = 0xf0000000;
 uint64_t width_fb = 0;
 uint64_t height_fb = 0;
 uint64_t size_fb = 0;
@@ -15,19 +15,19 @@ uint64_t size_fb = 0;
 void fb_init(struct multiboot_tag_framebuffer *fbtag)
 {
     fb = fbtag;
-    video_fb = (uint32_t *)fbtag->common.framebuffer_addr;
     width_fb = fbtag->common.framebuffer_width;
     height_fb = fbtag->common.framebuffer_height;
     size_fb = width_fb * height_fb;
+    video_fb = (~1 - size_fb * sizeof(uint32_t)) & ~0xfff;
 
-    recursive_map((uint64_t)video_fb, (uint64_t)video_fb, width_fb * height_fb * sizeof(uint32_t));
+    recursive_map(fbtag->common.framebuffer_addr, video_fb, size_fb * sizeof(uint32_t));
 }
-void put_pixel(uint32_t x, uint32_t y, uint32_t color)
+void fb_put_pixel(uint32_t x, uint32_t y, uint32_t color)
 {
     if (width_fb <= x || height_fb <= y)
         return;
 
-    video_fb[width_fb * y + x] = color;
+    *(uint64_t *)(video_fb + (width_fb * y + x) * sizeof(uint32_t)) = color;
 }
 void fb_fill_rect(uint32_t x, uint32_t y, int32_t w, int32_t h, uint32_t color)
 {
@@ -43,7 +43,7 @@ void fb_fill_rect(uint32_t x, uint32_t y, int32_t w, int32_t h, uint32_t color)
             i += width_fb - w;
             for (int32_t xx = w; xx > 0; xx--)
             {
-                video_fb[i++] = color;
+                *(uint64_t *)(video_fb + i++ * sizeof(uint32_t)) = color;
             }
         }
     }
@@ -56,7 +56,7 @@ void fb_fill_rect(uint32_t x, uint32_t y, int32_t w, int32_t h, uint32_t color)
             for (uint32_t xx = x; xx < x + w; xx++)
             {
                 if (xx < width_fb && yy < height_fb)
-                    video_fb[i + xx] = color;
+                    *(uint64_t *)(video_fb + (i + xx) * sizeof(uint32_t)) = color;
             }
         }
     }
@@ -85,7 +85,7 @@ void fb_put_char(char ch, uint32_t x, uint32_t y, uint32_t color)
                 // test if a pixel is drawn here
                 if ((bCh >> px++) & 1)
                 {
-                    video_fb[i] = color;
+                    *(uint64_t *)(video_fb + i * sizeof(uint32_t)) = color;
                 }
                 i++;
             }
@@ -107,7 +107,7 @@ void fb_put_char(char ch, uint32_t x, uint32_t y, uint32_t color)
                 {
                     // test if the pixel will be off screen
                     if (xpos > 0 && xpos < width_fb && yy + y > 0 && yy + y < height_fb)
-                        video_fb[i + xpos] = color;
+                        *(uint64_t *)(video_fb + (i + xpos) * sizeof(uint32_t)) = color;
                 }
                 xpos++;
             }

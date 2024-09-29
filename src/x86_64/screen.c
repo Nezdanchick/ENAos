@@ -6,7 +6,7 @@
 
 #define SCREEN_SIZE 2000
 
-void *video_text = (void*)0xb8000;;
+void *video_text = (void*)0xb8000;
 char black_screen[SCREEN_SIZE];
 
 uint8_t color = SCREEN_COLOR_WHITE | SCREEN_COLOR_BLACK << 4;
@@ -57,9 +57,10 @@ void screen_scroll()
 }
 void screen_write(char *string)
 {
+    terminal_check_position();
     strext((video_text + terminal_getpos() * 2), string, color);
     terminal_x += strlen(string);
-    terminal_check_position();
+    cursor_setpos(terminal_x, terminal_y);
 }
 // additional
 void screen_set_color(uint8_t foreground, uint8_t background)

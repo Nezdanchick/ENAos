@@ -19,6 +19,8 @@ extern scroll *terminal_scroll;
 extern stdout *terminal_output;
 extern setpos *cursor_setpos;
 
+extern void stdio_init();
+
 extern void set_backspace(backspace *func);
 extern void set_clear(clear *func);
 extern void set_scroll(scroll *func);

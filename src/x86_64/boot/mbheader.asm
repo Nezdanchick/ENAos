@@ -16,8 +16,8 @@ fb_tag_start:
     dw 5    ; framebuffer
     dw 0    ; optional tag
     dd fb_tag_end - fb_tag_start  ; length
-    dd 0    ; width
-    dd 0    ; height
+    dd 800    ; width
+    dd 600    ; height
     dd 32   ; bit depth
 fb_tag_end:
 

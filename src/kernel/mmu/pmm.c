@@ -22,7 +22,6 @@ typedef struct
     uint8_t flag;
 } memory_block_t;
 
-uint64_t *init_heap = (void *)0x100000;
 uint64_t *heap = (void *)0x200000;
 uint64_t heap_pointer;
 memory_block_t *first_block;
@@ -30,15 +29,7 @@ memory_block_t *last_block;
 
 void pmm_init()
 {
-    // pre init before recursive map
-    first_block = (void *)init_heap;
-    CLEAR_BLOCK_INFO(first_block);
-    first_block->flag = VALID_FLAG | USAGE_FLAG;
-
-    last_block = first_block;
-    heap_pointer = START_BLOCK(first_block);
-
-    recursive_map((uint64_t)heap, (uint64_t)heap, PAGE_SIZE);
+    init_map_page((uint64_t)heap, (uint64_t)heap);
 
     // init
     first_block = (void *)heap;

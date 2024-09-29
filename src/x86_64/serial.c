@@ -1,5 +1,6 @@
 #include <serial.h>
 #include <io.h>
+#include <stdio.h>
 
 int serialport;
 
@@ -25,6 +26,7 @@ int serial_init(enum Port port)
     // If serial is not faulty set it in normal operation mode
     // (not-loopback with IRQs enabled and OUT#1 and OUT#2 bits enabled)
     outb(serialport + 4, 0x0F);
+
     return 0;
 }
 int serial_received()

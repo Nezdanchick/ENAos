@@ -1,13 +1,8 @@
 ARCH:=x86_64
-RUNNER:=qemu-system-$(ARCH) -no-reboot -no-shutdown \
--audiodev pa,id=speaker -machine pcspk-audiodev=speaker \
--machine accel=kvm -cpu host \
--vga qxl \
--serial stdio -M smm=off --d int
 
 KERNEL=./bin/$(ARCH)-kernel
-ISO=./bin/nandos.iso
-ISO_PATH=target/$(ARCH)/iso
+ISO=./bin/ENAos.iso
+ISO_PATH=./target/$(ARCH)/iso
 
 x86_64_asm_source_files := $(shell find src/x86_64 -name *.asm)
 x86_64_asm_object_files := $(patsubst src/x86_64/%.asm, bin/x86_64/%.o, $(x86_64_asm_source_files))
@@ -27,33 +22,48 @@ CC_FLAGS=-c -I./src/include/ -O3 -ffreestanding -fno-builtin -nostdlib \
 LD_FLAGS=-o $(KERNEL) -T ./target/$(ARCH)/linker.ld -nostdlib -no-pie
 AS_FLAGS=-felf64
 
+RUNNER:=qemu-system-$(ARCH) -no-reboot -no-shutdown \
+-audiodev pa,id=speaker -machine pcspk-audiodev=speaker \
+-machine accel=kvm -cpu host \
+-vga qxl \
+-m 32M \
+-serial stdio -M smm=off --d int \
+-device ahci,id=ahci -drive file=$(ISO),id=disk,if=none,format=raw -device ide-hd,drive=disk,bus=ahci.0
+
 all: clean build create-iso debug
 
-build: $(kernel_c_object_files) $(x86_64_c_object_files) $(x86_64_asm_object_files)
-	@echo Building...
+build: build-info $(kernel_c_object_files) $(x86_64_c_object_files) $(x86_64_asm_object_files)
+	@echo Linking...
 	@mkdir -p $(dir $(KERNEL))
 	$(LD) $(LD_FLAGS) $(kernel_c_object_files) $(x86_64_c_object_files) $(x86_64_asm_object_files)
-	
+
+build-info:
+	@echo Building...
+
 create-iso: build
-	grub-file --is-x86-multiboot2 $(KERNEL)
+	@echo Creating ISO...
+	@grub-file --is-x86-multiboot2 $(KERNEL)
 	@mkdir -p $(dir $(ISO))
-	cp $(KERNEL) $(ISO_PATH)/boot/kernel
-	grub-mkrescue -o $(ISO) $(ISO_PATH) \
+	@cp $(KERNEL) $(ISO_PATH)/boot/kernel
+	@grub-mkrescue -o $(ISO) $(ISO_PATH) \
 	--product-name="nandos" \
-	--compress="no" \
-	--fonts="unicode" \
+	--compress="none" \
+	--fonts="" \
 	--locales="" \
 	--themes="" \
 	--install-modules="multiboot2 normal all_video font gfxterm \
 	part_acorn part_amiga part_apple part_bsd part_dfly \
 	part_dvh part_gpt part_plan part_sun part_sunpc" \
+	> /dev/null 2>&1 # hiddes output
 
 clean:
-	rm -rf ./bin
+	@rm -rf ./bin
 
 .ONESHELL:
 dd: create-iso
 	clear
+	@echo THIS OPERATION MAY DAMAGE YOUR DISK AND YOUR INFORMATION
+	@echo Be careful!
 	read -p "Enter Device Name (for example 'sda'): " device
 	device_path=/dev/$$device
 	echo Your device is $$device_path.
@@ -68,18 +78,18 @@ dd: create-iso
 
 debug:
 	@echo Debugging...
-	$(RUNNER) $(ISO)
+	$(RUNNER)
 	
 $($(ARCH)_asm_object_files): bin/$(ARCH)/%.o : src/$(ARCH)/%.asm
-	mkdir -p $(dir $@)
-	$(AS) $(AS_FLAGS) $(patsubst bin/$(ARCH)/%.o, src/$(ARCH)/%.asm, $@) -o $@
+	@mkdir -p $(dir $@)
+	@$(AS) $(AS_FLAGS) $(patsubst bin/$(ARCH)/%.o, src/$(ARCH)/%.asm, $@) -o $@
 
 $($(ARCH)_c_object_files): bin/$(ARCH)/%.o : src/$(ARCH)/%.c
-	mkdir -p $(dir $@)
-	$(CC) $(CC_FLAGS) $(patsubst bin/$(ARCH)/%.o, src/$(ARCH)/%.c, $@) -o $@
+	@mkdir -p $(dir $@)
+	@$(CC) $(CC_FLAGS) $(patsubst bin/$(ARCH)/%.o, src/$(ARCH)/%.c, $@) -o $@
 
 $(kernel_c_object_files): bin/kernel/%.o : src/kernel/%.c
-	mkdir -p $(dir $@)
-	$(CC) $(CC_FLAGS) $(patsubst bin/kernel/%.o, src/kernel/%.c, $@) -o $@
+	@mkdir -p $(dir $@)
+	@$(CC) $(CC_FLAGS) $(patsubst bin/kernel/%.o, src/kernel/%.c, $@) -o $@
 
 .PHONY: all build create-iso clean dd debug
