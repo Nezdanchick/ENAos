@@ -9,11 +9,11 @@ int terminal_y = 0;
 int terminal_width = 80;
 int terminal_height = 25;
 
-void stdio_stub() {serial_write("stdio_stub");}
-void stdio_stub_write(__attribute__((unused)) char *string) {serial_write("stdio_stub_write");}
+void stdio_stub() {}
+void stdio_stub_write(__attribute__((unused)) char *string) {}
 void stdio_stub_setpos(
     __attribute__((unused)) int x,
-    __attribute__((unused)) int y) {serial_write("stdio_stub_setpos");}
+    __attribute__((unused)) int y) {}
 
 backspace *terminal_backspace = stdio_stub;
 clear *terminal_clear = stdio_stub;

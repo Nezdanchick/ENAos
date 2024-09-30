@@ -6,8 +6,8 @@
 
 #define SCREEN_SIZE 2000
 
-void *video_text = (void*)0xb8000;
-char black_screen[SCREEN_SIZE];
+void *video_text = (void *)0xb8000;
+volatile char *black_screen[SCREEN_SIZE];
 
 uint8_t color = SCREEN_COLOR_WHITE | SCREEN_COLOR_BLACK << 4;
 
@@ -44,14 +44,14 @@ void screen_clear()
 {
     terminal_x = 0;
     terminal_y = 0;
-    strext(video_text, black_screen, color);
+    strext(video_text, (char *)black_screen, color);
     cursor_set(0, 0);
 }
 void screen_scroll()
 {
-    for (int i = terminal_width * 2; i < SCREEN_SIZE * 2; i++)  // scroll all rows
+    for (int i = terminal_width * 2; i < SCREEN_SIZE * 2; i++) // scroll all rows
         *((char *)video_text + i - terminal_width * 2) = *((char *)video_text + i);
-    for (int i = (SCREEN_SIZE - terminal_width); i < SCREEN_SIZE; i++)  // clear last row
+    for (int i = (SCREEN_SIZE - terminal_width); i < SCREEN_SIZE; i++) // clear last row
         *((char *)video_text + i * 2) = 0;
     terminal_y = terminal_height - 1;
 }

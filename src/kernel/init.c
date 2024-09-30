@@ -2,9 +2,10 @@
 
 void init(uint64_t multiboot_addr, uint64_t multiboot_magic)
 {
-    screen_init();
     serial_init(COM1);
+
     pmm_init();
+    screen_init();
     fs_init();
 
     interrupts_init();

@@ -152,7 +152,7 @@ bool shell(char *command) // runs commands, returns exit code, 1 = exit
     else if (strncmp(command, "malloc", 6))
     {
         ptr = kmalloc(atoi(&command[7]));
-        printf("alloc at 0x%lx", (uint64_t)ptr);
+        printf("alloc at 0x%lx\n", (uint64_t)ptr);
     }
     else if (strcmp(command, "free"))
         free(ptr);
