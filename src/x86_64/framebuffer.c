@@ -7,7 +7,7 @@ uint64_t font[256];
 
 struct multiboot_tag_framebuffer *fb;
 
-uint64_t video_fb = 0xf0000000;
+uint64_t video_fb = 0;
 uint64_t width_fb = 0;
 uint64_t height_fb = 0;
 uint64_t size_fb = 0;
@@ -15,10 +15,10 @@ uint64_t size_fb = 0;
 void fb_init(struct multiboot_tag_framebuffer *fbtag)
 {
     fb = fbtag;
+    video_fb = fbtag->common.framebuffer_addr;
     width_fb = fbtag->common.framebuffer_width;
     height_fb = fbtag->common.framebuffer_height;
     size_fb = width_fb * height_fb;
-    video_fb = (~1 - size_fb * sizeof(uint32_t)) & ~0xfff;
 
     recursive_map(fbtag->common.framebuffer_addr, video_fb, size_fb * sizeof(uint32_t));
 }

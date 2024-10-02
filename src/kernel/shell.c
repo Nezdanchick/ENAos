@@ -68,7 +68,7 @@ void video_test()
 }
 extern uint64_t video_fb;
 bool shell(char *command) // runs commands, returns exit code, 1 = exit
-{
+{   // TODO make alias commands
     static void *ptr;
     if (strcmp(command, "help"))
         printf(
@@ -81,9 +81,12 @@ bool shell(char *command) // runs commands, returns exit code, 1 = exit
             "echo(text) - print text to screen\n"
             "error(text) - print error message an halt\n"
             "exit - qemu shutdown\n"
+            "free - free last memory allocation\n"
             "pci(bus, slot, func) - show pci info\n"
+            "rep(n, command) - repeat command n times\n"
             "logo - show os logo\n"
             "lspci - show all pci devices\n"
+            "malloc(size) - allocate size of memory\n"
             "test - show test image on display\n"
             "video - show display info\n"
             "### Info ###\n"
@@ -95,6 +98,19 @@ bool shell(char *command) // runs commands, returns exit code, 1 = exit
         shell("cpuid");
         shell("video");
         printf("Welcome to ENAos! Date of build is %s\n", __DATE__);
+    }
+    else if (strncmp(command, "rep", 3))
+    {
+        char **args = get_args(command, 4, ' ', 2);
+        if (args == NULL)
+            return false;
+        int times = atoi(args[0]);
+        char *cmd = args[1];
+        for (int i = 0; i < times; i++)
+        {
+            printf("%s\n", cmd);
+            shell(cmd);
+        }
     }
     else if (strncmp(command, "add", 3))
     {

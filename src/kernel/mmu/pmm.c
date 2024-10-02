@@ -41,6 +41,7 @@ typedef struct
 } bitmap_t;
 
 uint64_t heap = 0x200000;
+uint64_t heap_max = 0x2000000;
 uint64_t heap_pointer;
 bitmap_t *last_bitmap;
 
@@ -51,9 +52,10 @@ bitmap_block_t *pmm_create_block(uint64_t size);
 void pmm_init()
 {
     printf("INIT PMM...\n");
-    heap_pointer = heap;
+    heap_pointer = heap + BITMAP_SIZE;
     last_bitmap = (void *)heap;
     init_map_page(heap, heap);
+    recursive_map(heap, heap, BITMAP_SIZE);
     recursive_map(heap_pointer, heap_pointer, BITMAP_SIZE);
 
     if (BLOCK_SIZE < BITMAP_BLOCKS)
@@ -65,7 +67,8 @@ void pmm_init()
 bitmap_t *pmm_create_bitmap()
 {
     bitmap_t *bitmap = (void *)heap_pointer;
-    memset(bitmap, 0, BITMAP_SIZE); // TODO delete memset 0
+    if (heap_pointer >= heap_max)
+        return NULL;
     bitmap->info.block_number = 0;
     bitmap->info.index = 0;
 
@@ -76,21 +79,21 @@ bitmap_t *pmm_create_bitmap()
 
     heap_pointer += BITMAP_SIZE;
     recursive_map(heap_pointer, heap_pointer, BITMAP_SIZE);
-    printf("create bitmap at 0x%lx\n", bitmap);
     return bitmap;
 }
 bitmap_block_t *pmm_create_block(uint64_t size)
 {
     bitmap_t *bitmap = last_bitmap;
+    if (last_bitmap == NULL)
+        return NULL;
+    if (size > BITMAP_SIZE - sizeof(bitmap_info_t))
+        panic("Bitmap can't create block of size 0x%lx", size);
+
     uint64_t count = pmm_get_block_count(size);
     if (bitmap->info.index + count + RESERVE_BLOCKS > BITMAP_BLOCKS)
     {
         last_bitmap = pmm_create_bitmap();
         return pmm_create_block(size);
-    }
-    if (count > BITMAP_BLOCKS)
-    {
-        panic("Kernel fault. Bitmap can't create block of size 0x%lx", size);
     }
     bitmap_block_t *block = &bitmap->blocks[bitmap->info.index];
 
@@ -131,7 +134,6 @@ void pmm_free_block(void *ptr)
 
     if (!(bitmap->info.flags[index] & PRESENT_FLAG))
         panic("Not present at 0x%lx", ptr);
-
     if (bitmap->info.flags[index] & FREE_FLAG)
         panic("Already free at 0x%lx", ptr);
 
@@ -140,7 +142,7 @@ void pmm_free_block(void *ptr)
         if (!(bitmap->info.flags[i] & PRESENT_FLAG) || BLOCK_NUMBER(bitmap->info.flags[i]) != number)
             break;
 
-        bitmap->info.flags[i] |= FREE_FLAG;
+        bitmap->info.flags[i] = FREE_FLAG;
         memset(&bitmap->blocks[i], 0, BLOCK_SIZE);
     }
 }
@@ -176,6 +178,12 @@ void *kmalloc(uint64_t size)
     ptr = pmm_create_block(size);
     if (ptr == NULL)
         ptr = pmm_search_free_block(size);
+    if (ptr == NULL)
+        panic("Bitmap is full. Can't create new block and malloc 0x%lx bytes.\n"
+              "Start:     0x%lx\n"
+              "End:       0x%lx\n"
+              "Free size: 0x%lx",
+              size, heap, heap_max, heap_pointer - heap_max);
     return ptr;
 }
 void free(void *pointer)
