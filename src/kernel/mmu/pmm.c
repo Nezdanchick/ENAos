@@ -14,6 +14,7 @@
 
 #define PRESENT_FLAG 0b0001
 #define FREE_FLAG 0b0010
+#define VMM_FLAG 0b0100
 #define BLOCK_NUMBER(flag) (flag >> 16)
 
 // ## BLOCK_NUMBER ###### FLAGS ######
@@ -97,9 +98,9 @@ bitmap_block_t *pmm_create_block(uint64_t size)
     }
     bitmap_block_t *block = &bitmap->blocks[bitmap->info.index];
 
-    for (uint64_t i = 0; i <= count; i++)
+    for (uint64_t i = 0; i < count; i++)
     {
-        bitmap->info.flags[i + bitmap->info.index] |= PRESENT_FLAG;
+        bitmap->info.flags[i + bitmap->info.index] = (uint32_t)(bitmap->info.block_number << 16) | PRESENT_FLAG;
     }
 
     bitmap->info.block_number++;
@@ -124,7 +125,7 @@ uint64_t pmm_get_block_index(void *ptr)
 {
     bitmap_t *bitmap = pmm_get_bitmap(ptr);
     uint64_t offset = (uint64_t)ptr - (uint64_t)bitmap;
-    return offset / BLOCK_SIZE;
+    return offset / BLOCK_SIZE - 1;
 }
 void pmm_free_block(void *ptr)
 {
@@ -133,17 +134,15 @@ void pmm_free_block(void *ptr)
     uint16_t number = BLOCK_NUMBER(bitmap->info.flags[index]);
 
     if (!(bitmap->info.flags[index] & PRESENT_FLAG))
-        panic("Not present at 0x%lx", ptr);
+        panic("Not present at 0x%lx; flags: 0x%lx", ptr, bitmap->info.flags[index]);
     if (bitmap->info.flags[index] & FREE_FLAG)
-        panic("Already free at 0x%lx", ptr);
+        panic("Already free at 0x%lx, flag: 0x%lx", ptr, bitmap->info.flags[index]);
 
     for (size_t i = index; i < BITMAP_BLOCKS; i++)
     {
         if (!(bitmap->info.flags[i] & PRESENT_FLAG) || BLOCK_NUMBER(bitmap->info.flags[i]) != number)
             break;
-
-        bitmap->info.flags[i] = FREE_FLAG;
-        memset(&bitmap->blocks[i], 0, BLOCK_SIZE);
+        bitmap->info.flags[i] |= FREE_FLAG;
     }
 }
 bitmap_block_t *pmm_search_free_block(uint64_t size)
@@ -151,22 +150,34 @@ bitmap_block_t *pmm_search_free_block(uint64_t size)
     uint64_t need_blocks = pmm_get_block_count(size);
     bitmap_block_t *block = NULL;
 
-    for (uint64_t ptr = (uint64_t)last_bitmap; ptr > (uint64_t)heap; ptr -= BITMAP_SIZE)
+    for (uint64_t ptr = (uint64_t)last_bitmap; ptr >= heap && ptr < heap_max; ptr -= BITMAP_SIZE)
     { // from last to first bitmap
         bitmap_t *bitmap = (void *)ptr;
 
         uint16_t free_count = 0;
-        for (size_t i = 0; i < BITMAP_BLOCKS; i++)
+        uint16_t index = bitmap->info.index;
+        for (size_t i = 0; i <= index; i++)
         { // foreach block
             uint32_t flag = bitmap->info.flags[i];
-            if (!(flag & PRESENT_FLAG) && !(flag & FREE_FLAG))
+            if (!(flag & PRESENT_FLAG))
+                return block;
+            if (!(flag & FREE_FLAG))
             {
                 free_count = 0;
                 continue;
             }
             if (++free_count == need_blocks)
-            {
-                block = &bitmap->blocks[i - need_blocks + 1];
+            { // found
+                for (size_t j = i - need_blocks + 1; j <= i; j++)
+                { // foreach free block
+                    block = &bitmap->blocks[j];
+                    bitmap->info.flags[j] = (uint32_t)(bitmap->info.block_number << 16) | PRESENT_FLAG;
+                    bitmap->blocks[j] = (bitmap_block_t){0};
+                }
+                memset(&bitmap->blocks[i - need_blocks + 1], 0, BLOCK_SIZE * need_blocks);
+                if (i == index)
+                    bitmap->info.index -= need_blocks;
+                break;
             }
         }
     }
@@ -175,9 +186,9 @@ bitmap_block_t *pmm_search_free_block(uint64_t size)
 void *kmalloc(uint64_t size)
 {
     void *ptr = NULL;
-    ptr = pmm_create_block(size);
+    ptr = pmm_search_free_block(size);
     if (ptr == NULL)
-        ptr = pmm_search_free_block(size);
+        ptr = pmm_create_block(size);
     if (ptr == NULL)
         panic("Bitmap is full. Can't create new block and malloc 0x%lx bytes.\n"
               "Start:     0x%lx\n"
@@ -195,5 +206,11 @@ void free(void *pointer)
 }
 void *page_alloc()
 {
-    return kmalloc(PAGE_SIZE);
+    void *ptr = kmalloc(PAGE_SIZE);
+    bitmap_t *bitmap = pmm_get_bitmap(ptr);
+    uint64_t index = pmm_get_block_index(ptr);
+
+    bitmap->info.flags[index] |= VMM_FLAG;
+
+    return ptr;
 }

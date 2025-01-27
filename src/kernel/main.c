@@ -28,9 +28,11 @@ void task2()
 void main()
 {
     terminal_clear();
+    shell("logo");
     shell("about");
 
     char *input_buffer = kmalloc(0x100);
+
     while (true)
     {
         memset(input_buffer, 0, 256);

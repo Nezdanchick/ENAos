@@ -16,9 +16,12 @@
 // device
 #include <io.h>
 #include <pci.h>
-#include <serial.h>
 #include <cpuid.h>
+
+// drivers
+#include <serial.h>
 #include <pcspeaker.h>
+#include <drivers/ata.h>
 
 // print
 #include <cursor.h>

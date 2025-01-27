@@ -1,3 +1,3 @@
 #pragma once
 
-extern int detect_cpu(void);
+extern char *cpu_get_brand_string();

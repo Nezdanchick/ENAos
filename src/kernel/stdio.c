@@ -84,6 +84,16 @@ char *gets(char *string)
             {
                 terminal_backspace();
                 *string-- = '\0';
+                if (key.ctrl)
+                {
+                    while (address < string)
+                    {
+                        terminal_backspace();
+                        *string-- = '\0';
+                        if (*string == ' ')
+                            break;
+                    }
+                }
             }
             break;
 

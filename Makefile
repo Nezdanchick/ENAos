@@ -25,10 +25,10 @@ AS_FLAGS=-felf64
 RUNNER:=qemu-system-$(ARCH) -no-reboot -no-shutdown \
 -audiodev pa,id=speaker -machine pcspk-audiodev=speaker \
 -machine accel=kvm -cpu host \
--vga qxl \
+-vga vmware \
 -m 32M \
 -serial stdio -M smm=off --d int \
--device ahci,id=ahci -drive file=$(ISO),id=disk,if=none,format=raw -device ide-hd,drive=disk,bus=ahci.0
+-device ahci,id=ahci -drive file=$(ISO),id=disk,if=none,format=raw -device ide-hd,drive=disk,bus=ide.0
 
 all: clean build create-iso debug
 

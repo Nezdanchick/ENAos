@@ -6,3 +6,4 @@
 
 extern void *memset(void *destination, int value, size_t size);
 extern bool memcmp(const void *a, const void *b, uint32_t size);
+extern void *memcpy(void *destination, const void *source, size_t count);
