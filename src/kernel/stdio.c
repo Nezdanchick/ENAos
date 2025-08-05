@@ -109,6 +109,7 @@ char *gets(char *string)
     // after Enter pressed
     terminal_x = 0;
     terminal_y++;
+    putserial('\n');
     terminal_check_position();
     *string = '\0';
     return string;

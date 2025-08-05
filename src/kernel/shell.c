@@ -285,11 +285,6 @@ bool shell(char *command) // runs commands, returns exit code, 1 = exit
         terminal_clear();
         video_test();
     }
-    else if (strcmp(command, "search"))
-    {
-        void *pmm_search_free_block(uint64_t size);
-        printf("found: 0x%lx\n", pmm_search_free_block(PAGE_SIZE));
-    }
     else if (strcmp(command, "video"))
         printf("Display %dx%d at 0x%lx\nTerminal width: %d height: %d\n",
                fb->common.framebuffer_width, fb->common.framebuffer_height, fb->common.framebuffer_addr,
