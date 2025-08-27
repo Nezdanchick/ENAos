@@ -19,8 +19,7 @@
 ## How to build?
 
 Install these packages:
-You can change CC in Makefile to clang and remove -target section in CFLAGS
-> make nasm clang grub mtools xorriso qemu-base qemu-system-x86_64 qemu-ui-sdl qemu-audio-pa
+> make nasm clang lld grub mtools xorriso qemu-base qemu-system-x86_64 qemu-ui-sdl qemu-audio-pa
 
 Go to terminal and write
 > make build

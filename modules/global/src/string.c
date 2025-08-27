@@ -66,14 +66,14 @@ char *itoa(size_t value, char *str, int base)
     char *result;
     char *ptr;
     char *start;
-    // Check for supported base.
+    
     if (base < 2 || base > 36)
     {
         *str = '\0';
         return str;
     }
     result = ptr = str;
-    // Set '-' for negative decimals.
+    
     if ((int64_t)value < 0 && base == 10)
     {
         *ptr++ = '-';
@@ -85,9 +85,9 @@ char *itoa(size_t value, char *str, int base)
         *ptr++ = NUMERIC_STRING[value % abs(base)];
         value /= base;
     } while (value);
-    // Terminating the string.
+    
     *ptr-- = '\0';
-    // Invert the numbers.
+    
     while (start < ptr)
     {
         char tmp = *start;

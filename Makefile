@@ -1,95 +1,67 @@
-ARCH:=x86_64
+output:=iso
+iso_path=bin/ENAos.iso
 
-KERNEL=./bin/$(ARCH)-kernel
-ISO=./bin/ENAos.iso
-ISO_PATH=./target/$(ARCH)/iso
+module_makefile:=module.Makefile
 
-x86_64_asm_source_files := $(shell find src/x86_64 -name *.asm)
-x86_64_asm_object_files := $(patsubst src/x86_64/%.asm, bin/x86_64/%.o, $(x86_64_asm_source_files))
+global_inc:=modules/global/include/
+global_obj:=modules/global/obj
 
-x86_64_c_source_files := $(shell find src/x86_64 -name *.c)
-x86_64_c_object_files := $(patsubst src/x86_64/%.c, bin/x86_64/%.o, $(x86_64_c_source_files))
+priority_modules:=test global
 
-kernel_c_source_files := $(shell find src/kernel -name *.c)
-kernel_c_object_files := $(patsubst src/kernel/%.c, bin/kernel/%.o, $(kernel_c_source_files))
+modules_all:=$(patsubst modules/%,%,$(wildcard modules/*))
 
-CC=clang
-LD=ld.lld
-AS=nasm
+modules:=$(priority_modules) $(filter-out $(priority_modules),$(modules_all))
 
-CC_FLAGS=-c -I./src/include/ -O3 -ffreestanding -fno-builtin -nostdlib \
--mno-red-zone -mcmodel=kernel -Wall -Wextra -fno-pic -target $(ARCH)-unknown-none
-LD_FLAGS=-o $(KERNEL) -T ./target/$(ARCH)/linker.ld -nostdlib -no-pie
-AS_FLAGS=-felf64
+qemu:=qemu-system-x86_64 -no-reboot \
+	-audiodev pa,id=speaker -machine pcspk-audiodev=speaker \
+	-machine accel=kvm -cpu host \
+	-vga vmware \
+	-m 32M \
+	-serial stdio -M smm=off --d int \
+	-device ahci,id=ahci -drive file=$(iso_path),id=disk,if=none,format=raw -device ide-hd,drive=disk,bus=ide.0
 
-RUNNER:=qemu-system-$(ARCH) -no-reboot -no-shutdown \
--audiodev pa,id=speaker -machine pcspk-audiodev=speaker \
--machine accel=kvm -cpu host \
--vga vmware \
--m 32M \
--serial stdio -M smm=off --d int \
--device ahci,id=ahci -drive file=$(ISO),id=disk,if=none,format=raw -device ide-hd,drive=disk,bus=ide.0
+needed_tools:=nasm clang lld grub-mkrescue mtools xorriso qemu-system-x86_64
 
-all: clean build create-iso debug
+all: check-tools clean build debug
 
-build: build-info $(kernel_c_object_files) $(x86_64_c_object_files) $(x86_64_asm_object_files)
-	@echo Linking...
-	@mkdir -p $(dir $(KERNEL))
-	$(LD) $(LD_FLAGS) $(kernel_c_object_files) $(x86_64_c_object_files) $(x86_64_asm_object_files)
+check-tools:
+	@for tool in $(needed_tools); do \
+		if ! which $${tool} >/dev/null 2>&1; then \
+			echo "Error: $${tool} not found in PATH"; \
+			exit 1; \
+		fi; \
+	done
 
-build-info:
-	@echo Building...
+$(modules):
+	@mkdir -p $(output)
+	@make -C modules/$@ \
+		output=$(CURDIR)/$(output) module_makefile=$(CURDIR)/$(module_makefile) \
+		global_inc=$(CURDIR)/$(global_inc) global_obj=$(CURDIR)/$(global_obj)
 
-create-iso: build
-	@echo Creating ISO...
-	@grub-file --is-x86-multiboot2 $(KERNEL)
-	@mkdir -p $(dir $(ISO))
-	@cp $(KERNEL) $(ISO_PATH)/boot/kernel
-	@grub-mkrescue -o $(ISO) $(ISO_PATH) \
-	--product-name="nandos" \
-	--compress="none" \
-	--fonts="" \
-	--locales="" \
-	--themes="" \
-	--install-modules="multiboot2 normal all_video font gfxterm \
-	part_acorn part_amiga part_apple part_bsd part_dfly \
-	part_dvh part_gpt part_plan part_sun part_sunpc" \
-	> /dev/null 2>&1 # hiddes output
-
-clean:
-	@rm -rf ./bin
-
-.ONESHELL:
-dd: create-iso
-	clear
-	@echo THIS OPERATION MAY DAMAGE YOUR DISK AND YOUR INFORMATION
-	@echo Be careful!
-	read -p "Enter Device Name (for example 'sda'): " device
-	device_path=/dev/$$device
-	echo Your device is $$device_path.
-	read -p "Are you sure? [y/N]: " answer
-	if [[ ($$answer = "yes" || $$answer = "y") && -e $$device_path ]]; then
-		echo $$device_path is correct;
-		echo dd if=$(ISO) of=$$device_path;
-		sudo dd if=$(ISO) of=$$device_path;
-	else
-		echo $$device_path is incorrect device path;
-	fi
+build: $(modules)
+	@mkdir -p $(dir $(iso_path))
+	@grub-mkrescue -o $(iso_path) $(output) \
+		--product-name="ENAos" \
+		--compress="none" \
+		--fonts="" \
+		--locales="" \
+		--themes="" \
+		--install-modules="multiboot2 normal all_video font gfxterm \
+		part_acorn part_amiga part_apple part_bsd part_dfly \
+		part_dvh part_gpt part_plan part_sun part_sunpc" \
+		> /dev/null 2>&1
 
 debug:
-	@echo Debugging...
-	$(RUNNER)
-	
-$($(ARCH)_asm_object_files): bin/$(ARCH)/%.o : src/$(ARCH)/%.asm
-	@mkdir -p $(dir $@)
-	@$(AS) $(AS_FLAGS) $(patsubst bin/$(ARCH)/%.o, src/$(ARCH)/%.asm, $@) -o $@
+	@echo Debugging
+	@$(qemu) -no-shutdown
 
-$($(ARCH)_c_object_files): bin/$(ARCH)/%.o : src/$(ARCH)/%.c
-	@mkdir -p $(dir $@)
-	@$(CC) $(CC_FLAGS) $(patsubst bin/$(ARCH)/%.o, src/$(ARCH)/%.c, $@) -o $@
+clean:
+	@rm -rf bin
+	@rm -rf $(output)
 
-$(kernel_c_object_files): bin/kernel/%.o : src/kernel/%.c
-	@mkdir -p $(dir $@)
-	@$(CC) $(CC_FLAGS) $(patsubst bin/kernel/%.o, src/kernel/%.c, $@) -o $@
+clean_modules:
+	@for module in $(modules); do \
+		rm -r modules/$$module/obj > /dev/null 2>&1 || true; \
+	done
 
-.PHONY: all build create-iso clean dd debug
+.PHONY: all build debug clean clean_modules $(modules)

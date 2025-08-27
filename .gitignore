@@ -1,5 +1,5 @@
-/.vscode/settings.json
-/bin/*
-/target/*/iso/boot/kernel
+bin/*
+iso/
+obj/
 
-!/bin/*.iso
+!bin/*.iso
