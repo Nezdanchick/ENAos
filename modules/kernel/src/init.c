@@ -1,18 +1,27 @@
 #include <init.h>
 
-void init(uint64_t multiboot_addr, uint64_t multiboot_magic)
+void module_load(struct multiboot_tag_module *module)
 {
-    serial_init(COM1);
+    // Placeholder for module loading logic
+    printf("Loading module at 0x%x of size 0x%x bytes\ncmd: %s\n", module->mod_start, module->mod_end - module->mod_start, module->cmdline);
+    if (strcmp(module->cmdline, "logo") == 0)
+    {
+        logo_bmp = (void *)(uintptr_t)(module->mod_start);
+    }
+}
 
-    pmm_init();
-    screen_init();
-    fs_init();
+void init(uint32_t multiboot_addr, uint32_t multiboot_magic)
+{
+    init_serial(COM1);
 
-    interrupts_init();
-    asm("sti");
+    init_pmm();
+    init_screen();
+    init_fs();
 
-    timer_init();
-    keyboard_init();
+    init_interrupts();
+
+    init_timer();
+    init_keyboard();
 
     if (multiboot_magic != MULTIBOOT2_BOOTLOADER_MAGIC)
         panic("Multiboot2 magic (0x%x) is incorrect\n", multiboot_magic);
@@ -22,7 +31,7 @@ void init(uint64_t multiboot_addr, uint64_t multiboot_magic)
 
     struct multiboot_tag_framebuffer *fbtag = {0};
 
-    for (struct multiboot_tag *tag = (struct multiboot_tag *)(multiboot_addr + 8);
+    for (struct multiboot_tag *tag = (struct multiboot_tag *)((uintptr_t)(multiboot_addr + 8));
          tag->type != MULTIBOOT_TAG_TYPE_END;
          tag = (struct multiboot_tag *)((multiboot_uint8_t *)tag + ((tag->size + 7) & ~7)))
     {
@@ -31,11 +40,14 @@ void init(uint64_t multiboot_addr, uint64_t multiboot_magic)
         case MULTIBOOT_TAG_TYPE_FRAMEBUFFER:
             fbtag = (struct multiboot_tag_framebuffer *)tag;
             break;
+        case MULTIBOOT_TAG_TYPE_MODULE:
+            module_load((struct multiboot_tag_module *)tag);
+            break;
         }
     }
 
-    fb_init(fbtag);
+    init_framebuffer(fbtag);
 
     if (fbtag->common.framebuffer_addr != 0xb8000)
-        fb_terminal_init();
+        init_graphics_terminal();
 }

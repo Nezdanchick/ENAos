@@ -4,7 +4,7 @@
 
 int serialport;
 
-int serial_init(enum Port port)
+int init_serial(enum Port port)
 {
     serialport = port;
     outb(serialport + 1, 0x00); // Disable all interrupts

@@ -15,221 +15,150 @@
 
 #include <drivers/ata.h>
 
+#include <alias.h>
+#include <bmp.h>
+
 char *logo = ""
-             "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n"
-             "::::::::::::::::.+:::::::####::##::#::::#::::#####::#####:::::::::::::::::::::::\n"
-             ":::::::::::::::.x+.::::::#;;;::#:#:#:::#:#:::#:::#::#:::::::::::::::::::::::::::\n"
-             ":::::::::::::::+xx.::::::####::#:#:#::#:::#::#:::#::#####:::::::::::::::::::::::\n"
-             ":::::::::::::::xxx:::::::#:::::#:#:#;:#####::#:::#::::::#:::::::::::::::::::::::\n"
-             ":::::::::::::.xxxx:::::::####::#::##::#:::#::#####::#####::::::::::::;+X$&&&&;::\n"
-             ":::::::::::::;xxxx::::::::::::::::::::::::::::::::..:;+XX&&&&&&&&&&&&&&&&&&&&:::\n"
-             "::::::::::::.xxxxx;:::::::::::::::....::;:$&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&$.::\n"
-             ":::::::::::.+xxxxx+....::;++xxxxxxxxxxxxx+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&;:::\n"
-             ":::::::::::xxxxxxxxxxxxxxxxxxxxxxxxxxxxx+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&$::::\n"
-             ":::::::::.+xxxxxxx::+xxxxxxxxxxxxxxxxxxx+&&&&&&&&&&&&&&&X:.     .;x&&&&&&&&+::::\n"
-             ":::::::::;xxxxxx+&&    .:xxxxxxxxxxxxxxx;&&&&&&&&&&&x&&&&:            :&&&&.::::\n"
-             "::::::::.xxxxx+&&&&         :+xxxxxxxxxxX&&&&&&&&&X&&&&&&X               +$:::::\n"
-             "::::::::+xxxxX&&&&&;            .+xxxxxx&&&&&&&&X&&&&&&&&&                ..::::\n"
-             "::::::::xxx;&&&&&&&X                .+xx&&&&&&&&&&&&&&&&&&                .:::::\n"
-             ":::::::xxxX&&&&&&&&&                 +xx&&&&&X&&&&&&&&&&&&                .:::::\n"
-             ":::::.+x+&&&&&&&&&&&.              +xxxx&&&&X&&&&&&&&&&&&&  ..:;xX$$&&&&&$::::::\n"
-             ":::::+x;&&&&&&&&&&&&+            .xxxxx+&&&$&&&&Xx$&&&&&&&&&&&&&&&&&&&&&&;::::::\n"
-             "::::;x+$&&&&&&&&&&&&&           +xxxxxx:&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&.::::::\n"
-             ":::.xxxxx+X&&&&&&&&&&.        :xxxxxxxx+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&$:::::::\n"
-             "xx;+xxxxxxxx:.&&&&&&&+      .+xxxxxxxxx&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&;:::::::\n"
-             "xxxxxxxxxxx+  .++x&&&&     ;xxxxxxxxxxx&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&.:::::::\n"
-             "xxxxxxxxxxx:;xxxxxxx+&.  .xxxxxxxxxxxx+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&$::::::::\n"
-             "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx;&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&+::::::::\n"
-             "xxxxxxx;xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx+&&&&&&&&&&&&&&&&&&&&&&&&&&&$:::::::::\n"
-             "xx+:.:::xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx+&&&&&&&&&&&&&x+&&&&&&&&&&&&::::::::::\n"
-             ".::::::::xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx+&&&&&&&xxxxxxx&&&&&&&&&&&&&.:::::::::\n"
-             "::::::::.+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx&&&xxxxxxxxx+&&&&&&&&&&&&&&$::::::::::\n"
-             "::::::::::xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx+&&&&&&&&&&&&&&&;::::::::::\n"
-             "::::::::::+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx+$&&&&&&&&&&&&&&&&.::::::::::\n"
-             ":::::::::::.:+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx+$&&&&&&&&&&&&&&&&&&&.:::::::::::\n"
-             ":::::::::::::::.:+xxxxxxxxxxxxxxxxxxxxxxxxxxxx+&&&&&&&&&&&&&&&&&&;:.::::::::::::\n"
-             ":::::::::::::::::::.:+xxxxxxxxxxxxxxxxxxxxxx+X&&&&&&&&&&&&&&&$:.:::.::::::::::::\n"
-             ":::::::::::::::::::::::.:+xxxxxxxxxxxxxxxxxx+&&&&&&&&&&&&&+.:::::::.::::::::::::\n"
-             ":::::::::::::::::::::::::::.:+xxxxxxxxxxxxxx+&&&&&&&&&&;::::::::::.:::::::::::::\n"
-             ":::::::::::::::::::::::::::::::..;xxxxxxxxxxx$&&&&&$:.::::::::::::.:::::::::::::\n"
-             "::::::::::::::::::::::::::::::::::::..;xxxxxxX&&X:::::::::::::::::.::::::::::..:\n"
+             ";;;;;;;;;;;;;;;;;;:..:::::::::::::::::::\n"
+             ";;;;;;;;;;;;;:.:::.::::..:...:....:.::::\n"
+             ";;;;;;;;;:.:::::+XX+++++++++++++++++.:::\n"
+             ";;;;;;.:::::::XXXXX+++++++=-  .+++++=:::\n"
+             ";;::XX+:::.XXXXXXXX++++++;&$       ==:::\n"
+             ".::XXXX:xXXXXXXXXXX;++++;&&&.   -++++:::\n"
+             ":::XXXXXXXXXX+=.-X:+++++&&&x==+++++++:::\n"
+             ":::XXXXx=-      -XX;++;;;++++++++++++:::\n"
+             ":::XX=&&&&.    -xXX++++++++++++++++++:::\n"
+             ":::xXXX=&&=   xXXXXX+++++++++++++++++:::\n"
+             "::==XXX==.=. XXXXXXX++++++++++++;++++:::\n"
+             ":.&&:XXXXXXXXXXXXXX$++++++++++;++++++.::\n"
+             ":.$$XxXXXXXX$$&&&&&&.+++++++;++++++++.::\n"
+             "::&$&$&&&&&&&&&&&&&&&&$+++;++++++++++.::\n"
+             "::;&&&+&&&&&&&&&&&&&&&&;:+++++++++++:.::\n"
+             ":::.$&&;&&&&&&&&&&&&&&$&+++++++++++::.::\n"
+             ":::::$&&X&&&&&&&&&&&&&&&:++++++++:::::::\n"
+             "::::::..;&&&&&&&&&&&&&&&X+++++++.:::::::\n"
+             "::::::::::x&$&&&&&&&&&&&$+++++;:::::::::\n"
+             ":::::::::::::.+$&&&&&&&&&:+++.::::::::::\n"
+             ":::::::::::::::::: .X$&&&$+:::::::::::::\n"
+             ":::::::::::::::::::::::::..:::::::::::::\n"
              "";
 
 char **get_args(char *string, size_t start, char separator, int count);
 
-void video_test()
-{
-    int h = fb->common.framebuffer_height;
-    int w = fb->common.framebuffer_width;
-    for (int j = 0; j < h; j++)
-    {
-        for (int i = 0; i < w; i++)
-        {
-            fb_put_pixel(i, j, (((w - i) * (h - j)) & (i * (h - j)) & ((w - i) * j)) | (i * j));
-        }
-    }
-}
+int last_pos;
+void *logo_bmp = NULL;
+static int recursion_depth = 0;
+static int recursion_limit = 32;
 
-static size_t alias_index = 1;
-static char *alias_array = NULL;
-void init_alias()
+char *shell(char *command) // runs commands, returns command result
 {
-    alias_array = kmalloc(PAGE_SIZE);
-}
-void set_alias(char *alias, char *command)
-{
-    strcpy(&alias_array[alias_index], alias);
-    alias_index += strlen(alias);
-    alias_array[++alias_index] = 0;
-    strcpy(&alias_array[alias_index], command);
-    alias_index += strlen(command);
-    alias_array[++alias_index] = 0;
-}
-char *get_alias(char *command)
-{
-    size_t offset = 0;
-    for (size_t i = 0; i < PAGE_SIZE; i++)
-    {
-        if (alias_array[i] == '\0' && alias_array[i + 1] != '\0')
-        {
-            offset = i + 1;
-            char *alias = &alias_array[offset];
-
-            if (strcmp(alias, command))
-            {
-                char *cmd = NULL;
-                for (size_t i = offset + 1; i < PAGE_SIZE; i++)
-                {
-                    if (alias_array[i] == '\0')
-                    {
-                        offset = i + 1;
-                        cmd = &alias_array[offset];
-                        break;
-                    }
-                }
-                return cmd == NULL ? command : cmd;
-            }
-        }
-    }
-    return command;
-}
-void del_alias(char *command)
-{
-    size_t offset = 0;
-    for (size_t i = 0; i < PAGE_SIZE; i++)
-    {
-        if (alias_array[i] == '\0' && alias_array[i + 1] != '\0')
-        {
-            offset = i + 1;
-            char *alias = &alias_array[offset];
-
-            if (strcmp(alias, command))
-            {
-                char *cmd = NULL;
-                for (size_t i = offset + 1; i < PAGE_SIZE; i++)
-                {
-                    if (alias_array[i] == '\0')
-                    {
-                        offset = i + 1;
-                        cmd = &alias_array[offset];
-
-                        memset(alias, 0, strlen(alias) + strlen(cmd) + 1);
-                        break;
-                    }
-                }
-            }
-        }
-    }
-}
-bool shell(char *command) // runs commands, returns exit code, 1 = exit
-{                         // TODO make alias commands
     static void *ptr;
     char **args = NULL;
+    char *result = NULL;
 
-    if (alias_array == NULL)
-        init_alias();
+    if (++recursion_depth > recursion_limit)
+    {
+        printf("shell recursion limit\n");
+        goto error_cleanup;
+    }
 
-    command = get_alias(command);
+    char *alias = get_alias(command);
+    if (alias != NULL)
+        command = alias;
 
-    if (strcmp(command, "help"))
+    if (strcmp(command, "help") == 0)
+    {
         printf(
-            "### Commands ###\n"
+            "### Default Commands ###\n"
             "about - show system info\n"
-            "add(a, b) - do simple math\n"
-            "alias name=command - simplify some commands\n"
+            "add(a, b) - returns a + b\n"
+            "aliases - show variables)\n"
             "beep(length) - make a sound\n"
             "clear - clear screen\n"
             "cpuid - show CPU info\n"
             "echo(text) - print text to screen\n"
-            "error(text) - print error message an halt\n"
-            "exit - qemu shutdown\n"
-            "free - free last memory allocation\n"
-            "pci(bus, slot, func) - show pci info\n"
-            "rep(n, command) - repeat command n times\n"
             "logo - show os logo\n"
             "lspci - show all pci devices\n"
-            "malloc(size) - allocate size of memory\n"
-            "test - show test image on display\n"
             "video - show display info\n"
+            "### Debug ###\n"
+            "error(text) - print error message an halt\n"
+            "pci(bus, slot, func) - show pci info\n"
+            "setrecursionlimit(limit) - set shell recursion limit\n"
+            "malloc(size) - allocate size of memory\n"
+            "free - free last memory allocation\n"
+            "exit - qemu shutdown\n"
+            "### Cursor ###\n"
+            "setpos(x, y) - set position of cursor\n"
+            "retpos - set position to previous\n"
+            "getpos - return position of cursor\n"
+            "### Operators ###\n"
+            "do(...) - run commands one after another separated by ';'\n"
+            "rep(n, command) - repeat command n times\n"
+            "var name=command - simplify some commands or create variable\n"
+            "[command] - evaluate command\n"
             "### Info ###\n"
             "func(a, b, c) means the number and purpose of arguments.\n"
-            "Arguments should be entered without parentheses and separated by a space.\n");
-    else if (strcmp(command, "about"))
+            "Arguments should be entered without parentheses and separated by a space.\n"
+            "Command, that return something can be used in eval\n"
+        );
+    }
+    else if (strcmp(command, "about") == 0)
     {
+        printf("ENAos\n\nSystem info:\n");
         shell("cpuid");
         shell("video");
-        printf("Welcome to ENAos! Date of build is %s\n", __DATE__);
+        printf("Date of build is %s\n\n", __DATE__);
+        printf("Welcome to ENA shell!\n");
     }
-    else if (strncmp(command, "add", 3))
+    else if (strncmp(command, "add", 3) == 0)
     {
         args = get_args(command, 4, ' ', 2);
         if (args == NULL)
-            return false;
-        printf("%d\n", atoi(args[0]) + atoi(args[1]));
+            goto error_cleanup;
+        result = itoa(atoi(args[0]) + atoi(args[1]), NULL, 10);
     }
-    else if (strncmp(command, "alias", 5))
+    else if (strcmp(command, "aliases") == 0)
     {
-        args = get_args(command, 6, '=', 2);
+        list_aliases();
+    }
+    else if (strncmp(command, "var", 3) == 0)
+    {
+        args = get_args(command, 4, '=', 2);
         if (args == NULL)
-            return false;
-        printf("alias set for \"%s\" to \"%s\"\n", args[0], args[1]);
+            goto error_cleanup;
         set_alias(args[0], args[1]);
     }
-    else if (strncmp(command, "-alias", 6))
+    else if (strncmp(command, "beep", 4) == 0)
     {
-        args = get_args(command, 7, ' ', 1);
+        args = get_args(command, 5, ' ', 2);
         if (args == NULL)
-            return false;
-        printf("alias deleted for \"%s\"\n", args[0]);
-        del_alias(args[0]);
+            goto error_cleanup;
+        beep(atoi(args[0]), atoi(args[1]));
     }
-    else if (strncmp(command, "beep", 4))
+    else if (strcmp(command, "clear") == 0)
     {
-        args = get_args(command, 5, ' ', 1);
-        if (args == NULL)
-            return false;
-        beep(800, atoi(args[0]));
-    }
-    else if (strcmp(command, "clear"))
         terminal_clear();
-    else if (strcmp(command, "cpuid"))
+    }
+    else if (strcmp(command, "cpuid") == 0)
+    {
         printf("CPU: %s\n", cpu_get_brand_string());
-    else if (strncmp(command, "echo", 4))
+    }
+    else if (strncmp(command, "echo", 4) == 0)
     {
         args = get_args(command, 5, ' ', 1);
         if (args == NULL)
-            return false;
+            goto error_cleanup;
         printf("%s\n", args[0]);
     }
-    else if (strncmp(command, "error", 5))
+    else if (strncmp(command, "error", 5) == 0)
+    {
         panic(&command[6]);
-    else if (strcmp(command, "exit"))
-        return 1;
-    else if (strncmp(command, "pci", 3))
+    }
+    else if (strncmp(command, "pci", 3) == 0)
     {
         args = get_args(command, 4, ' ', 3);
         if (args == NULL)
-            return false;
+            goto error_cleanup;
         pci_device_t device;
         pci_read_config(atoi(args[0]), atoi(args[1]), atoi(args[2]), &device);
         printf(
@@ -241,26 +170,23 @@ bool shell(char *command) // runs commands, returns exit code, 1 = exit
             "Header:   0x%x\n",
             device.vendor_id, device.device_id, device.class_code, device.subclass, device.prog_if, device.header_type);
     }
-    else if (strncmp(command, "rep", 3))
+    else if (strncmp(command, "rep", 3) == 0)
     {
         args = get_args(command, 4, ' ', 2);
         if (args == NULL)
-            return false;
+            goto error_cleanup;
         int times = atoi(args[0]);
         for (int i = 0; i < times; i++)
-        {
-            printf("%s\n", args[1]);
             shell(args[1]);
-        }
     }
-    else if (strncmp(command, "read", 4))
+    else if (strncmp(command, "read", 4) == 0)
     {
         args = get_args(command, 5, ' ', 1);
         if (args == NULL)
-            return false;
+            goto error_cleanup;
         char *data = kmalloc(PAGE_SIZE);
         void *start = data;
-        ata_read((uint64_t*)data, atoi(args[0]), 8);
+        ata_read((uint64_t *)data, atoi(args[0]), 8);
         while ((uint64_t)start + PAGE_SIZE != (uint64_t)data)
             printf("%c", *data++);
         printf("\n");
@@ -268,42 +194,95 @@ bool shell(char *command) // runs commands, returns exit code, 1 = exit
         ata_write(start, 0, 8);
         free(start);
     }
-    else if (strncmp(command, "int", 3))
+    else if (strncmp(command, "setrecursionlimit", 17) == 0)
+    {
+        args = get_args(command, 18, ' ', 1);
+        if (args == NULL)
+            goto error_cleanup;
+        int lim = atoi(args[0]);
+        if (lim < 1)
+            printf("Can't set recursion limit: %d is less than 1", lim);
+        else
+            recursion_limit = lim;
+    }
+    else if (strncmp(command, "setpos", 6) == 0)
+    {
+        args = get_args(command, 7, ' ', 2);
+        if (args == NULL)
+            goto error_cleanup;
+        last_pos = terminal_getpos();
+        terminal_setpos(atoi(args[0]), atoi(args[1]));
+    }
+    else if (strcmp(command, "getpos") == 0)
+    {
+        result = itoa(terminal_getpos(), NULL, 10);
+    }
+    else if (strcmp(command, "retpos") == 0)
+    {
+        terminal_setpos(last_pos, 0);
+    }
+    else if (strncmp(command, "do", 2) == 0)
+    {
+        size_t count = strcount(&command[3], ';') + 1;
+        args = get_args(command, 3, ';', count);
+        if (args == NULL)
+            goto error_cleanup;
+        for (size_t i = 0; i < count; i++)
+            shell(args[i]);
+    }
+    else if (strncmp(command, "int", 3) == 0)
     {
         args = get_args(command, 4, ' ', 1);
         if (args == NULL)
-            return false;
+            goto error_cleanup;
         int interrupt = atoi(args[0]);
         asm("int $0" : "=r"(interrupt));
     }
-    else if (strcmp(command, "lspci"))
+    else if (strcmp(command, "lspci") == 0)
         show_pci_devices();
-    else if (strcmp(command, "logo"))
-        printf(logo);
-    else if (strcmp(command, "test"))
+    else if (strcmp(command, "logo") == 0)
     {
-        terminal_clear();
-        video_test();
+        if (logo_bmp != NULL)
+        {
+            uint32_t scale_y = fb->common.framebuffer_height / terminal_height;
+
+            BMPInfoHeader *info = get_bmp_info((const uint8_t *)logo_bmp);
+            draw_bmp_at_position((const uint8_t *)logo_bmp,
+                                 fb->common.framebuffer_width - info->width, scale_y * terminal_y);
+            terminal_setpos(0, terminal_y + info->height / scale_y + 1);
+        }
+        else
+        {
+            printf(logo);
+        }
     }
-    else if (strcmp(command, "video"))
+    else if (strcmp(command, "video") == 0)
         printf("Display %dx%d at 0x%lx\nTerminal width: %d height: %d\n",
                fb->common.framebuffer_width, fb->common.framebuffer_height, fb->common.framebuffer_addr,
                terminal_width, terminal_height);
-    else if (strncmp(command, "malloc", 6))
+    else if (strncmp(command, "malloc", 6) == 0)
     {
         ptr = kmalloc(atoi(&command[7]));
         printf("alloc at 0x%lx\n", (uint64_t)ptr);
     }
-    else if (strcmp(command, "free"))
+    else if (strcmp(command, "free") == 0)
+    {
         free(ptr);
-    else if (!strcmp(command, ""))
-        printf("Command '%s' not found. Try 'help'\n", command);
+    }
+    else if (strcmp(command, "") != 0)
+        result = command;
 
+    recursion_depth = 0;
     free(args);
-    return false;
+    return result;
+
+error_cleanup:
+    recursion_depth--;
+    free(args);
+    return "ERROR";
 }
 char **get_args(char *string, size_t start, char separator, int count)
-{
+{ // `arg` in evaluated
     size_t length = strlen(string);
     size_t offset = sizeof(char *) * count;
     char **args = kmalloc(offset + length);
@@ -315,14 +294,20 @@ char **get_args(char *string, size_t start, char separator, int count)
     string = &strcopy[start];
     int arg_i = 0;
     size_t prev = 0;
+
+    int arg_variable = 0;
     for (size_t i = 0; i < length && arg_i < count; i++)
     {
+        if (string[i] == '[')
+            arg_variable++;
+        if (string[i] == ']')
+            arg_variable--;
         if (arg_i == count - 1)
         {
             args[arg_i++] = &string[prev];
             break;
         }
-        if (string[i] == separator || i == length - 1)
+        if (arg_variable == 0 && (string[i] == separator || i == length - 1))
         {
             string[i] = '\0';
             args[arg_i++] = &string[prev];
@@ -331,6 +316,17 @@ char **get_args(char *string, size_t start, char separator, int count)
     }
     if (arg_i <= count - 1)
         goto args_error;
+
+    for (int i = 0; i < count; i++)
+    {
+        char *cmd = args[i];
+        if (cmd[0] != '[')
+            continue;
+
+        size_t len = strlen(cmd);
+        cmd[len - 1] = '\0';
+        args[i] = shell(&cmd[1]);
+    }
     return args;
 
 args_error:

@@ -98,7 +98,7 @@ void kb_handler()
     kb_buffer[scancode] = pressed ? KEY_PRESSED : KEY_RELEASED;
     key_scancode = pressed ? scancode : 0;
 }
-void keyboard_init()
+void init_keyboard()
 {
     set_irq_handler(33, kb_handler);
 

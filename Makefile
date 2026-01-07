@@ -1,10 +1,7 @@
-output:=iso
 iso_path=bin/ENAos.iso
 
+build_output:=iso
 module_makefile:=module.Makefile
-
-global_inc:=modules/global/include/
-global_obj:=modules/global/obj
 
 priority_modules:=test global
 
@@ -33,14 +30,12 @@ check-tools:
 	done
 
 $(modules):
-	@mkdir -p $(output)
-	@make -C modules/$@ \
-		output=$(CURDIR)/$(output) module_makefile=$(CURDIR)/$(module_makefile) \
-		global_inc=$(CURDIR)/$(global_inc) global_obj=$(CURDIR)/$(global_obj)
+	@mkdir -p $(build_output)
+	@make -C modules/$@ root=$(CURDIR) output=$(CURDIR)/$(build_output) module_makefile=$(CURDIR)/$(module_makefile)
 
 build: $(modules)
 	@mkdir -p $(dir $(iso_path))
-	@grub-mkrescue -o $(iso_path) $(output) \
+	@grub-mkrescue -o $(iso_path) $(build_output) \
 		--product-name="ENAos" \
 		--compress="none" \
 		--fonts="" \
@@ -59,7 +54,7 @@ clean:
 	@rm -rf bin
 	@rm -rf $(output)
 
-clean_modules:
+clean-modules:
 	@for module in $(modules); do \
 		rm -r modules/$$module/obj > /dev/null 2>&1 || true; \
 	done

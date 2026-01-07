@@ -1,46 +1,53 @@
-ARCH=x86_64
+arch=x86_64
 
-OBJ=obj
+obj=obj
+global_inc=$(root)/modules/global/include/
+global_obj=$(root)/modules/global/obj
 
-CC=clang
-CXX=clang++
-LD=ld.lld
-AS=nasm
+cc=clang
+cxx=clang++
+ld=ld.lld
+as=nasm
 
-CFLAGS=-c -I./include/ -I$(global_inc) -O3 -ffreestanding -fno-builtin -nostdlib \
--mno-red-zone -mcmodel=kernel -Wall -Wextra -fno-pic -target $(ARCH)-unknown-none
-CXXFLAGS=-c -I./include/ -I$(global_inc) -O3 -ffreestanding -fno-builtin -nostdlib \
--mno-red-zone -mcmodel=kernel -Wall -Wextra -fno-pic -target $(ARCH)-unknown-none
-LDFLAGS=-nostdlib -no-pie
-ASFLAGS=-felf64
+cflags=-c -I./include/ -I$(global_inc) -O3 -ffreestanding -fno-builtin -nostdlib \
+-mno-red-zone -mcmodel=kernel -Wall -Wextra -fno-pic -target $(arch)-unknown-none
+cxxflags=$(cflags)
+ldflags=-nostdlib -no-pie
+asflags=-felf64
 
-$(OBJ)/%.o: src/%.c
+$(obj)/%.o: src/%.c
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
-	@$(CC) $(CFLAGS) -c $< -o $@
+	@$(cc) $(cflags) -c $< -o $@
 
-$(OBJ)/%.o: src/%.cpp
+$(obj)/%.o: src/%.cpp
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
-	@$(CXX) $(CXXFLAGS) -c $< -o $@
+	@$(cxx) $(cxxflags) -c $< -o $@
 
-$(OBJ)/%.o: src/%.asm
+$(obj)/%.o: src/%.asm
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
-	@$(AS) $(ASFLAGS) $< -o $@
+	@$(as) $(asflags) $< -o $@
 
 c_src:=$(shell find src/ -name '*.c')
-c_obj:=$(patsubst src/%.c,$(OBJ)/%.o,$(c_src))
+c_obj:=$(patsubst src/%.c,$(obj)/%.o,$(c_src))
 
 cpp_src:=$(shell find src/ -name '*.cpp')
-cpp_obj:=$(patsubst src/%.cpp,$(OBJ)/%.o,$(cpp_src))
+cpp_obj:=$(patsubst src/%.cpp,$(obj)/%.o,$(cpp_src))
 
 asm_src:=$(shell find src/ -name '*.asm')
-asm_obj:=$(patsubst src/%.asm,$(OBJ)/%.o,$(asm_src))
+asm_obj:=$(patsubst src/%.asm,$(obj)/%.o,$(asm_src))
+
+ifneq (,$(wildcard ./linker.ld))
+linker=linker.ld
+else
+linker=$(root)/linker_module.ld
+endif
 
 $(target): $(c_obj) $(cpp_obj) $(asm_obj)
 	@mkdir -p $(dir $@)
 	@echo Linking $@
 	@echo $(global_objects)
-	$(LD) $(LDFLAGS) -T linker.ld \
-		$(shell find $(OBJ) -name '*.o') $(shell find $(global_obj) -name '*.o') -o $@
+	@$(ld) $(ldflags) -T $(linker) \
+		$(shell find $(obj) -name '*.o') $(shell find $(global_obj) -name '*.o') -o $@

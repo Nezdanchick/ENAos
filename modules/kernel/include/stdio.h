@@ -35,3 +35,4 @@ extern void printf(const char *fmt, ...);
 extern void vprintf(const char *fmt, va_list args);
 extern void putchar(char character);
 extern char *gets(char *string);
+extern char *terminal_gets(char *string);

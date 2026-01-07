@@ -18,9 +18,13 @@ enum Key
     RightArrow = 0x4D,
     DownArrow = 0x50,
 
+    Delete = 0x53,
     Escape = 0x01,
     Enter = 0x1C,
     Backspace = 0x0E,
+
+    Home = 0x47,
+    End = 0x4F,
 };
 
 typedef struct
@@ -41,7 +45,7 @@ typedef struct
     uint8_t character;
 } __attribute__((__packed__)) keyboard_key_t;
 
-extern void keyboard_init();
+extern void init_keyboard();
 extern keyboard_key_t keyboard_input();
 extern void wait_for_scancode(enum Key  scancode);
 extern enum Key  char_to_scancode(char character);

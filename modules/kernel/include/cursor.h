@@ -4,4 +4,4 @@
 
 extern void cursor_init();
 extern void cursor_disable();
-extern void cursor_set(int x, int y);
+extern void gcursor_set(int x, int y);

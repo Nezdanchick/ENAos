@@ -50,7 +50,7 @@ uint64_t pmm_get_block_count(uint64_t size);
 bitmap_t *pmm_create_bitmap();
 bitmap_block_t *pmm_create_block(uint64_t size);
 
-void pmm_init()
+void init_pmm()
 {
     printf("INIT PMM...\n");
     heap_pointer = heap + BITMAP_SIZE;

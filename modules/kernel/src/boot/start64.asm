@@ -15,10 +15,10 @@ start64:
     mov fs, ax
     mov gs, ax
 
-    ; multiboot values are 32 bit size
-    mov edi, [stack_top - 4]    ; multiboot2 address
-    mov esi, [stack_top - 8]    ; multiboot2 magic
-    add rsp, 8                  ; clear stack
+    ; ; multiboot values are 32 bit size
+    mov edi, [abs stack_top - 4]    ; multiboot2 address
+    mov esi, [abs stack_top - 8]    ; multiboot2 magic
+    add rsp, 8                      ; clear stack
 
 	call init   ; (dword addr, dword magic)
 	call main

@@ -2,7 +2,8 @@
 #include <interrupts/idt.h>
 #include <interrupts/pic.h>
 
-void interrupts_init() {
+void init_interrupts() {
     idt_init();
     pic_init();
+    asm("sti");
 }

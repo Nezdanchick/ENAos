@@ -7,43 +7,43 @@ uint64_t font[256];
 
 struct multiboot_tag_framebuffer *fb;
 
-uint64_t video_fb = 0;
-uint64_t width_fb = 0;
-uint64_t height_fb = 0;
-uint64_t size_fb = 0;
+uint64_t fb_video = 0;
+uint64_t fb_width = 0;
+uint64_t fb_height = 0;
+uint64_t fb_size = 0;
 
-void fb_init(struct multiboot_tag_framebuffer *fbtag)
+void init_framebuffer(struct multiboot_tag_framebuffer *fbtag)
 {
     fb = fbtag;
-    video_fb = fbtag->common.framebuffer_addr;
-    width_fb = fbtag->common.framebuffer_width;
-    height_fb = fbtag->common.framebuffer_height;
-    size_fb = width_fb * height_fb;
+    fb_video = fbtag->common.framebuffer_addr;
+    fb_width = fbtag->common.framebuffer_width;
+    fb_height = fbtag->common.framebuffer_height;
+    fb_size = fb_width * fb_height;
 
-    recursive_map(fbtag->common.framebuffer_addr, video_fb, size_fb * sizeof(uint32_t));
+    recursive_map(fbtag->common.framebuffer_addr, fb_video, fb_size * sizeof(uint32_t));
 }
 void fb_put_pixel(uint32_t x, uint32_t y, uint32_t color)
 {
-    if (width_fb <= x || height_fb <= y)
+    if (fb_width <= x || fb_height <= y)
         return;
 
-    *(uint64_t *)(video_fb + (width_fb * y + x) * sizeof(uint32_t)) = color;
+    *(uint64_t *)(fb_video + (fb_width * y + x) * sizeof(uint32_t)) = color;
 }
 void fb_fill_rect(uint32_t x, uint32_t y, int32_t w, int32_t h, uint32_t color)
 {
-    uint32_t i = width_fb * (y - 1);
+    uint32_t i = fb_width * (y - 1);
 
     // test if the rectangle will be clipped (will it be fully in the screen or partially)
-    if (x + w < width_fb && y + h < height_fb)
+    if (x + w < fb_width && y + h < fb_height)
     {
         // fully drawn
         i += x + w;
         for (int32_t yy = h; yy > 0; yy--)
         {
-            i += width_fb - w;
+            i += fb_width - w;
             for (int32_t xx = w; xx > 0; xx--)
             {
-                *(uint64_t *)(video_fb + i++ * sizeof(uint32_t)) = color;
+                *(uint64_t *)(fb_video + i++ * sizeof(uint32_t)) = color;
             }
         }
     }
@@ -52,11 +52,11 @@ void fb_fill_rect(uint32_t x, uint32_t y, int32_t w, int32_t h, uint32_t color)
         // clipped
         for (uint32_t yy = y; yy < y + h; yy++)
         {
-            i += width_fb;
+            i += fb_width;
             for (uint32_t xx = x; xx < x + w; xx++)
             {
-                if (xx < width_fb && yy < height_fb)
-                    *(uint64_t *)(video_fb + (i + xx) * sizeof(uint32_t)) = color;
+                if (xx < fb_width && yy < fb_height)
+                    *(uint64_t *)(fb_video + (i + xx) * sizeof(uint32_t)) = color;
             }
         }
     }
@@ -67,16 +67,16 @@ void fb_put_char(char ch, uint32_t x, uint32_t y, uint32_t color)
     uint64_t bCh = font[(int)ch];
 
     // check if it will be drawn off screen
-    if (x > width_fb || y > height_fb)
+    if (x > fb_width || y > fb_height)
         return;
 
     // test if the charactor will be clipped (will it be fully in the screen or partially)
-    if (x + 8 < width_fb && y + 8 < height_fb)
+    if (x + 8 < fb_width && y + 8 < fb_height)
     {
         // fully in the screen - pre calculate some of the values
         // so there is less going on in the loop
-        int32_t i = width_fb * (y - 1) + x + 8;
-        int32_t incAmount = width_fb - 8;
+        int32_t i = fb_width * (y - 1) + x + 8;
+        int32_t incAmount = fb_width - 8;
         for (int32_t yy = 7; yy >= 0; yy--)
         {
             i += incAmount;
@@ -85,7 +85,7 @@ void fb_put_char(char ch, uint32_t x, uint32_t y, uint32_t color)
                 // test if a pixel is drawn here
                 if ((bCh >> px++) & 1)
                 {
-                    *(uint64_t *)(video_fb + i * sizeof(uint32_t)) = color;
+                    *(uint64_t *)(fb_video + i * sizeof(uint32_t)) = color;
                 }
                 i++;
             }
@@ -95,10 +95,10 @@ void fb_put_char(char ch, uint32_t x, uint32_t y, uint32_t color)
     {
         // partially in the screen
         uint32_t xpos = 0;
-        uint32_t i = width_fb * (y - 1);
+        uint32_t i = fb_width * (y - 1);
         for (int32_t yy = 0; yy < 8; yy++)
         {
-            i += width_fb;
+            i += fb_width;
             xpos = x;
             for (int32_t xx = 7; xx >= 0; xx--)
             {
@@ -106,8 +106,8 @@ void fb_put_char(char ch, uint32_t x, uint32_t y, uint32_t color)
                 if ((bCh >> px++) & 1)
                 {
                     // test if the pixel will be off screen
-                    if (xpos > 0 && xpos < width_fb && yy + y > 0 && yy + y < height_fb)
-                        *(uint64_t *)(video_fb + (i + xpos) * sizeof(uint32_t)) = color;
+                    if (xpos > 0 && xpos < fb_width && yy + y > 0 && yy + y < fb_height)
+                        *(uint64_t *)(fb_video + (i + xpos) * sizeof(uint32_t)) = color;
                 }
                 xpos++;
             }

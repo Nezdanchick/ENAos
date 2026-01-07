@@ -22,4 +22,4 @@ enum uint8_t {
     SCREEN_COLOR_WHITE
 };
 
-extern void screen_init();
+extern void init_screen();

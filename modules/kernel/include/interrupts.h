@@ -2,5 +2,5 @@
 
 #include <interrupts/isrs.h>
 
-extern void interrupts_init();
+extern void init_interrupts();
 

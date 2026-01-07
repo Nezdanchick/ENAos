@@ -1,35 +1,20 @@
 #include <init.h>
 #include <shell.h>
+#include <alias.h>
+#include <history.h>
+#include <gcursor.h>
 
-void task_run(void function())
-{
-    function();
-}
-void task1()
-{
-    int i = 0;
-    while (true)
-    {
-        printf("%d", i++ % 10);
-        sleep_ms(10);
-    }
-}
-void task2()
-{
-    char c = 'A';
-    while (true)
-    {
-        printf("%c", c++);
-        if (c > 'Z')
-            c = 'A';
-        sleep_ms(10);
-    }
-}
 void main()
 {
     terminal_clear();
     shell("logo");
+    terminal_setpos(0, 0);
     shell("about");
+
+    init_alias();
+    init_history();
+
+    timer_add_callback(gcursor_update, 20);
 
     char *input_buffer = kmalloc(0x100);
 
@@ -37,8 +22,8 @@ void main()
     {
         memset(input_buffer, 0, 256);
         printf("/>");
-        gets(input_buffer);
-        if (shell(input_buffer))
+        terminal_gets(input_buffer);
+        if (strcmp(shell(input_buffer), "exit") == 0)
             break;
     }
     printf("Goodbye!\n");

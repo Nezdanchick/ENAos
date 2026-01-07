@@ -2,4 +2,5 @@
 
 #include <stdbool.h>
 
-extern bool shell(char *command);
+extern void *logo_bmp;
+extern char *shell(char *command);

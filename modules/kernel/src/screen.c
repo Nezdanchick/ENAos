@@ -16,7 +16,7 @@ void screen_clear();
 void screen_scroll();
 void screen_write(char *string);
 
-void screen_init()
+void init_screen()
 {
     memset(black_screen, ' ', SCREEN_SIZE);
 
@@ -25,7 +25,7 @@ void screen_init()
     set_clear(screen_clear);
     set_scroll(screen_scroll);
     set_stdout(screen_write);
-    set_cursor_setpos(cursor_set);
+    set_cursor_setpos(gcursor_set);
 
     terminal_width = 80;
     terminal_height = 25;
@@ -45,7 +45,7 @@ void screen_clear()
     terminal_x = 0;
     terminal_y = 0;
     strext(video_text, (char *)black_screen, color);
-    cursor_set(0, 0);
+    gcursor_set(0, 0);
 }
 void screen_scroll()
 {
