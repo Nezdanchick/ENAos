@@ -10,12 +10,14 @@ modules_all:=$(patsubst modules/%,%,$(wildcard modules/*))
 modules:=$(priority_modules) $(filter-out $(priority_modules),$(modules_all))
 
 qemu:=qemu-system-x86_64 -no-reboot \
-	-audiodev pa,id=speaker -machine pcspk-audiodev=speaker \
-	-machine accel=kvm -cpu host \
-	-vga vmware \
-	-m 32M \
-	-serial stdio -M smm=off --d int \
-	-device ahci,id=ahci -drive file=$(iso_path),id=disk,if=none,format=raw -device ide-hd,drive=disk,bus=ide.0
+    -audiodev pa,id=speaker -machine pcspk-audiodev=speaker \
+    -machine accel=kvm -cpu host \
+    -vga vmware \
+    -m 32M \
+    -serial stdio -M smm=off --d int \
+    -usb -device usb-ehci,id=ehci \
+    -drive if=none,id=usbstick,file=$(iso_path),format=raw \
+    -device usb-storage,drive=usbstick
 
 needed_tools:=nasm clang lld grub-mkrescue mtools xorriso qemu-system-x86_64
 

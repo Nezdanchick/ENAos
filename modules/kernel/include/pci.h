@@ -14,3 +14,4 @@ typedef struct
 
 extern void pci_read_config(uint8_t bus, uint8_t slot, uint8_t func, pci_device_t *device);
 extern void show_pci_devices();
+extern void show_usb_devices();

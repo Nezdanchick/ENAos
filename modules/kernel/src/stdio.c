@@ -70,17 +70,6 @@ void terminal_setpos(int collumn, int row)
     terminal_check_position();
 }
 
-// terminal output
-void printf(const char *fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-
-    vprintf(fmt, args);
-
-    va_end(args);
-}
-
 // terminal input
 char *gets(char *string)
 {

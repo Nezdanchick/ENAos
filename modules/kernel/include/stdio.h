@@ -31,8 +31,8 @@ extern int terminal_getpos();
 extern void terminal_setpos(int collumn, int row);
 extern void terminal_check_position();
 
-extern void printf(const char *fmt, ...);
-extern void vprintf(const char *fmt, va_list args);
-extern void putchar(char character);
+extern int printf(const char *fmt, ...);
+extern int vprintf(const char *fmt, va_list args);
+extern int putchar(int character);
 extern char *gets(char *string);
 extern char *terminal_gets(char *string);

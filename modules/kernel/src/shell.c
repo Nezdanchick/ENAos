@@ -79,6 +79,7 @@ char *shell(char *command) // runs commands, returns command result
             "echo(text) - print text to screen\n"
             "logo - show os logo\n"
             "lspci - show all pci devices\n"
+            "lsusb - show all usb devices\n"
             "video - show display info\n"
             "### Debug ###\n"
             "error(text) - print error message an halt\n"
@@ -99,8 +100,7 @@ char *shell(char *command) // runs commands, returns command result
             "### Info ###\n"
             "func(a, b, c) means the number and purpose of arguments.\n"
             "Arguments should be entered without parentheses and separated by a space.\n"
-            "Command, that return something can be used in eval\n"
-        );
+            "Command, that return something can be used in eval\n");
     }
     else if (strcmp(command, "about") == 0)
     {
@@ -240,6 +240,8 @@ char *shell(char *command) // runs commands, returns command result
     }
     else if (strcmp(command, "lspci") == 0)
         show_pci_devices();
+    else if (strcmp(command, "lsusb") == 0)
+        show_usb_devices();
     else if (strcmp(command, "logo") == 0)
     {
         if (logo_bmp != NULL)
