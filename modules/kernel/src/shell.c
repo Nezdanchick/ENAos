@@ -18,31 +18,6 @@
 #include <alias.h>
 #include <bmp.h>
 
-char *logo = ""
-             ";;;;;;;;;;;;;;;;;;:..:::::::::::::::::::\n"
-             ";;;;;;;;;;;;;:.:::.::::..:...:....:.::::\n"
-             ";;;;;;;;;:.:::::+XX+++++++++++++++++.:::\n"
-             ";;;;;;.:::::::XXXXX+++++++=-  .+++++=:::\n"
-             ";;::XX+:::.XXXXXXXX++++++;&$       ==:::\n"
-             ".::XXXX:xXXXXXXXXXX;++++;&&&.   -++++:::\n"
-             ":::XXXXXXXXXX+=.-X:+++++&&&x==+++++++:::\n"
-             ":::XXXXx=-      -XX;++;;;++++++++++++:::\n"
-             ":::XX=&&&&.    -xXX++++++++++++++++++:::\n"
-             ":::xXXX=&&=   xXXXXX+++++++++++++++++:::\n"
-             "::==XXX==.=. XXXXXXX++++++++++++;++++:::\n"
-             ":.&&:XXXXXXXXXXXXXX$++++++++++;++++++.::\n"
-             ":.$$XxXXXXXX$$&&&&&&.+++++++;++++++++.::\n"
-             "::&$&$&&&&&&&&&&&&&&&&$+++;++++++++++.::\n"
-             "::;&&&+&&&&&&&&&&&&&&&&;:+++++++++++:.::\n"
-             ":::.$&&;&&&&&&&&&&&&&&$&+++++++++++::.::\n"
-             ":::::$&&X&&&&&&&&&&&&&&&:++++++++:::::::\n"
-             "::::::..;&&&&&&&&&&&&&&&X+++++++.:::::::\n"
-             "::::::::::x&$&&&&&&&&&&&$+++++;:::::::::\n"
-             ":::::::::::::.+$&&&&&&&&&:+++.::::::::::\n"
-             ":::::::::::::::::: .X$&&&$+:::::::::::::\n"
-             ":::::::::::::::::::::::::..:::::::::::::\n"
-             "";
-
 char **get_args(char *string, size_t start, char separator, int count);
 
 int last_pos;
@@ -107,8 +82,7 @@ char *shell(char *command) // runs commands, returns command result
         printf("ENAos\n\nSystem info:\n");
         shell("cpuid");
         shell("video");
-        printf("Date of build is %s\n\n", __DATE__);
-        printf("Welcome to ENA shell!\n");
+        printf("Date of build is %s\n", __DATE__);
     }
     else if (strncmp(command, "add", 3) == 0)
     {
@@ -152,7 +126,10 @@ char *shell(char *command) // runs commands, returns command result
     }
     else if (strncmp(command, "error", 5) == 0)
     {
-        panic(&command[6]);
+        args = get_args(command, 6, ' ', 1);
+        if (args == NULL)
+            goto error_cleanup;
+        panic(args[0]);
     }
     else if (strncmp(command, "pci", 3) == 0)
     {
@@ -236,7 +213,7 @@ char *shell(char *command) // runs commands, returns command result
         if (args == NULL)
             goto error_cleanup;
         int interrupt = atoi(args[0]);
-        asm("int $0" : "=r"(interrupt));
+        __asm__("int $0" : "=r"(interrupt));
     }
     else if (strcmp(command, "lspci") == 0)
         show_pci_devices();
@@ -255,7 +232,7 @@ char *shell(char *command) // runs commands, returns command result
         }
         else
         {
-            printf(logo);
+            printf("No logo loaded\n");
         }
     }
     else if (strcmp(command, "video") == 0)
@@ -271,6 +248,8 @@ char *shell(char *command) // runs commands, returns command result
     {
         free(ptr);
     }
+    else if (recursion_depth == 1 && strcmp(command, "exit") != 0 && strcmp(command, "") != 0)
+        printf("Unknown command: %s\n", command);
     else if (strcmp(command, "") != 0)
         result = command;
 

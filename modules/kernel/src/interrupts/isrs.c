@@ -53,7 +53,7 @@ void handle_interrupt(uint8_t interrupt, uint64_t error_code, cpu_context_t *con
         if (handler != NULL)
             handler(context, error_code);
         else
-            panic("EXCEPTION [%d] %s with error code %d", interrupt, exception_name[interrupt], error_code);
+            panic("EXCEPTION [%d] %s with error code %ld", interrupt, exception_name[interrupt], error_code);
     }
     else
     {

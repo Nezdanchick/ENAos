@@ -60,7 +60,7 @@ void terminal_check_position()
         terminal_y += terminal_x / terminal_width;
         terminal_x = terminal_x % terminal_width;
     }
-    if (terminal_y >= terminal_height)
+    if (terminal_y >= terminal_height - 1)
         terminal_scroll();
 }
 void terminal_setpos(int collumn, int row)

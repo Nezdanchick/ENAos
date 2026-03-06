@@ -8,14 +8,16 @@ void *memset(void *buffer, int value, size_t size)
     }
     return buffer;
 }
-bool memcmp(const void *a, const void *b, uint32_t size)
+int memcmp(const void *s1, const void *s2, size_t n)
 {
-    while (size-- > 0)
+    const unsigned char *p1 = s1, *p2 = s2;
+
+    for (size_t i = 0; i < n; i++)
     {
-        if (*(int *)a != *(int *)b)
-            return false;
+        if (p1[i] != p2[i])
+            return p1[i] - p2[i];
     }
-    return true;
+    return 0;
 }
 void *memcpy(void *dest, const void *src, size_t count)
 {

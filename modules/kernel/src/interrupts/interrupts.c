@@ -5,5 +5,5 @@
 void init_interrupts() {
     idt_init();
     pic_init();
-    asm("sti");
+    __asm__("sti");
 }

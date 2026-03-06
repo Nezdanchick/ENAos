@@ -1,10 +1,9 @@
 #pragma once
 
-#include <math.h>
+#include <stdarg.h>
 
-__attribute__((noreturn)) extern void _panic(const char *error, ...);
-#define panic(...) _panic( \
-    "PATH       %s:%d\n"   \
-    "FUNCTION   %s\n"      \
-    "MESSAGE    %s\n",     \
-    __FILE__, __LINE__, __PRETTY_FUNCTION__, __VA_ARGS__)
+__attribute__((sysv_abi, noinline, noreturn)) 
+void _panic(const char *file, int line, const char *func, const char *msg, ...);
+
+#define panic(msg, ...) \
+    _panic(__FILE__, __LINE__, __PRETTY_FUNCTION__, msg, ##__VA_ARGS__)

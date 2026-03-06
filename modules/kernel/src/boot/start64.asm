@@ -2,7 +2,7 @@ global start64
 
 extern stack_top
 extern init
-extern main
+extern kmain
 
 section .text
 bits 64
@@ -21,7 +21,7 @@ start64:
     add rsp, 8                      ; clear stack
 
 	call init   ; (dword addr, dword magic)
-	call main
+	call kmain
 
 .halt:
     hlt

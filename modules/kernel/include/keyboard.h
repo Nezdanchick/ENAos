@@ -48,7 +48,7 @@ typedef struct
 extern void init_keyboard();
 extern keyboard_key_t keyboard_input();
 extern void wait_for_scancode(enum Key  scancode);
-extern enum Key  char_to_scancode(char character);
+extern int char_to_scancode(char character);
 extern bool is_key_pressed(enum Key scancode);
 extern bool is_key_released(enum Key scancode);
 extern bool is_key_printable(keyboard_key_t key);

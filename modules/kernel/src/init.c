@@ -48,6 +48,6 @@ void init(uint32_t multiboot_addr, uint32_t multiboot_magic)
 
     init_framebuffer(fbtag);
 
-    if (fbtag->common.framebuffer_addr != 0xb8000)
+    if (fbtag && fbtag->common.framebuffer_addr != 0xb8000)
         init_graphics_terminal();
 }

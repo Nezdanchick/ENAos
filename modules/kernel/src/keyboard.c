@@ -23,7 +23,7 @@ char kb_keys[] = " " // zero
 uint8_t kb_buffer[KB_BUFFER_SIZE];
 uint8_t key_scancode;
 
-enum Key char_to_scancode(char character)
+int char_to_scancode(char character)
 {
     for (int i = 0; i < 94; i++)
     {

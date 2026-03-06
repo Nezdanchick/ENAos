@@ -4,12 +4,10 @@
 #include <history.h>
 #include <gcursor.h>
 
-void main()
+void kmain()
 {
     terminal_clear();
-    shell("logo");
-    terminal_setpos(0, 0);
-    shell("about");
+    shell("do logo;setpos 0 0;about;echo Welcome to ENAos!;echo Type 'help' for a list of commands");
 
     init_alias();
     init_history();

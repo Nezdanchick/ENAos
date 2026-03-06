@@ -1,5 +1,6 @@
 #include <fb_terminal.h>
 #include <framebuffer.h>
+#include <gcursor.h>
 #include <panic.h>
 #include <stdio.h>
 #include <stddef.h>
@@ -17,7 +18,6 @@ void init_graphics_terminal()
     set_backspace(fb_backspace);
     set_clear(fb_clear);
     set_stdout(fb_write);
-    // set_cursor_setpos(fb_set_position);
     set_scroll(fb_scroll);
 
     terminal_width = fb->common.framebuffer_width / CHARACTER_WIDTH;
@@ -40,11 +40,15 @@ void fb_clear()
 }
 void fb_scroll()
 {
+    gcursor_hide();
+    gcursor_update();
     for (uint32_t i = fb_width * CHARACTER_HEIGHT; i < fb_size; i++) // scroll all rows
         *(fb_video + i - fb_width * CHARACTER_HEIGHT) = *(fb_video + i);
     for (uint32_t i = (fb_size - fb_width * CHARACTER_HEIGHT); i < fb_size; i++) // clear last row
         *(fb_video + i) = fb_bg_color;
-    terminal_y = terminal_height - 1;
+    terminal_y = terminal_height - 2;
+    gcursor_show();
+    gcursor_update();
 }
 void fb_set_color(uint32_t color)
 {

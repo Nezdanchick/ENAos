@@ -64,7 +64,7 @@ void sleep_ns(size_t nanoseconds)
 {
     size_t target_ms = timer_ns + nanoseconds;
     while (target_ms > timer_ns)
-        asm("hlt");
+        __asm__("hlt");
 }
 void sleep_ms(size_t milliseconds)
 {
