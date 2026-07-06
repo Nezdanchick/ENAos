@@ -55,10 +55,11 @@ int terminal_getpos()
 }
 void terminal_check_position()
 {
-    while (terminal_x < 0)
+    if (terminal_x < 0)
     {
-        terminal_x += terminal_width;
-        terminal_y--;
+        int offset = -terminal_x;
+        terminal_y -= (offset + terminal_width - 1) / terminal_width;
+        terminal_x = (terminal_width - (offset % terminal_width)) % terminal_width;
     }
     if (terminal_x >= terminal_width)
     {

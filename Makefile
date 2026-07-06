@@ -9,9 +9,11 @@ modules_all:=$(patsubst modules/%,%,$(wildcard modules/*))
 
 modules:=$(priority_modules) $(filter-out $(priority_modules),$(modules_all))
 
+KVM_FLAGS := $(shell [ -r /dev/kvm ] && echo "-machine accel=kvm -cpu host" || echo "-machine accel=tcg")
+
 qemu:=qemu-system-x86_64 -no-reboot \
     -audiodev pa,id=speaker -machine pcspk-audiodev=speaker \
-    -machine accel=kvm -cpu host \
+    $(KVM_FLAGS) \
     -vga vmware \
     -m 32M \
     -serial stdio -M smm=off --d int \
@@ -19,7 +21,7 @@ qemu:=qemu-system-x86_64 -no-reboot \
     -drive if=none,id=usbstick,file=$(iso_path),format=raw \
     -device usb-storage,drive=usbstick
 
-needed_tools:=nasm clang lld grub-mkrescue mtools xorriso qemu-system-x86_64
+needed_tools:=nasm clang lld mtools xorriso qemu-system-x86_64 wget
 
 all: check-tools clean build debug
 
@@ -31,22 +33,27 @@ check-tools:
 		fi; \
 	done
 
+limine:
+	@if [ ! -d limine ]; then \
+		git clone https://github.com/limine-bootloader/limine.git --branch=v8.x-binary --depth=1; \
+		make -C limine; \
+	fi
+
 $(modules):
 	@mkdir -p $(build_output)
 	@make -C modules/$@ root=$(CURDIR) output=$(CURDIR)/$(build_output) module_makefile=$(CURDIR)/$(module_makefile)
 
-build: $(modules)
+build: $(modules) limine
 	@mkdir -p $(dir $(iso_path))
-	@grub-mkrescue -o $(iso_path) $(build_output) \
-		--product-name="ENAos" \
-		--compress="none" \
-		--fonts="" \
-		--locales="" \
-		--themes="" \
-		--install-modules="multiboot2 normal all_video font gfxterm \
-		part_acorn part_amiga part_apple part_bsd part_dfly \
-		part_dvh part_gpt part_plan part_sun part_sunpc" \
-		> /dev/null 2>&1
+	@mkdir -p $(build_output)/boot/limine
+	@cp limine/limine-bios.sys limine/limine-bios-cd.bin limine/limine-uefi-cd.bin $(build_output)/boot/limine/
+	@xorriso -as mkisofs -b boot/limine/limine-bios-cd.bin \
+		-no-emul-boot -boot-load-size 4 -boot-info-table \
+		--efi-boot boot/limine/limine-uefi-cd.bin \
+		-efi-boot-part --efi-boot-image --protective-msdos-label \
+		$(build_output) -o $(iso_path) > /dev/null 2>&1
+	@./limine/limine bios-install $(iso_path) > /dev/null 2>&1
+
 
 debug:
 	@echo Debugging

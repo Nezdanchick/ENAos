@@ -4,6 +4,7 @@ ENTRY(start)
 
 SECTIONS
 {
+	. = 1M;
 	kernel_start = .;
 	
 	.multiboot :
