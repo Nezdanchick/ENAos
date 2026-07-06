@@ -1,6 +1,5 @@
 #include <history.h>
 #include <string.h>
-#include <memory.h>
 
 #define MAX_HISTORY 100
 #define MAX_CMD_LEN 256

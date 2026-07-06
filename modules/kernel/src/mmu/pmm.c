@@ -174,6 +174,7 @@ bitmap_block_t *pmm_search_free_block(uint64_t size)
                     bitmap->info.flags[j] = (uint32_t)(bitmap->info.block_number << 16) | PRESENT_FLAG;
                     bitmap->blocks[j] = (bitmap_block_t){0};
                 }
+                bitmap->info.block_number++;
                 memset(&bitmap->blocks[i - need_blocks + 1], 0, BLOCK_SIZE * need_blocks);
                 if (i == index)
                     bitmap->info.index -= need_blocks;

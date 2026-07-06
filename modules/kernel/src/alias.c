@@ -1,6 +1,6 @@
 #include <alias.h>
 #include <stdio.h>
-#include <memory.h>
+#include <string.h>
 
 #define MAX_ALIASES 64
 #define MAX_ALIAS_LEN 64

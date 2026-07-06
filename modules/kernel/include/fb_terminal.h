@@ -2,9 +2,6 @@
 
 #include <stdint.h>
 
-#define CHARACTER_HEIGHT 10
-#define CHARACTER_WIDTH 8
-
 extern uint32_t fb_bg_color;
 extern uint32_t fb_fg_color;
 extern uint32_t *fb_video;

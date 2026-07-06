@@ -47,7 +47,14 @@ void handle_interrupt(uint8_t interrupt, uint64_t error_code, cpu_context_t *con
     if (interrupt >= 32 && interrupt < 47)
         pic_eoi(interrupt);
 
-    if (interrupt < 32)
+
+    if (interrupt == 14)
+    {
+        uint64_t cr2;
+        __asm__ volatile("mov %%cr2, %0" : "=r"(cr2));
+        panic("EXCEPTION [14] Page Fault! CR2 Fault Address: 0x%lx", cr2);
+    }
+    else if (interrupt < 32)
     {
         exception_handler *handler = exception_handlers[interrupt];
         if (handler != NULL)

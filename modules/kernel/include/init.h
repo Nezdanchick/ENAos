@@ -9,7 +9,6 @@
 #include <string.h>
 
 // memory
-#include <memory.h>
 #include <mmu/pmm.h>
 #include <mmu/vmm.h>
 

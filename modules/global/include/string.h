@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <memory.h>
 
 extern char *strncpy(char *destination, const char *source, size_t len);
 extern char* strcpy(char* destination, const char* source);

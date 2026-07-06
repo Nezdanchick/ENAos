@@ -1,6 +1,5 @@
 #include <screen.h>
 #include <string.h>
-#include <memory.h>
 #include <cursor.h>
 #include <stdio.h>
 

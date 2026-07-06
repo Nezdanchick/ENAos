@@ -74,7 +74,7 @@ void terminal_setpos(int collumn, int row)
 char *gets(char *string)
 {
     char *address = string;
-    
+
     keyboard_key_t key = (keyboard_key_t){0};
     while (key.scancode != Enter)
     {
@@ -90,7 +90,6 @@ char *gets(char *string)
                 *address = '\0';
             }
             break;
-
         default:
             if (is_key_printable(key))
             {
@@ -100,7 +99,7 @@ char *gets(char *string)
             break;
         }
     }
-    
+
     *address = '\0';
     return string;
 }
@@ -108,7 +107,8 @@ char *gets(char *string)
 static void clear_text(int x, int y, int len)
 {
     terminal_setpos(x + len + 1, y);
-    for (int i = 0; i <= len; i++)
+    terminal_check_position();
+    for (int i = -1; i <= len; i++)
         terminal_backspace();
     terminal_setpos(x, y);
 }
@@ -128,75 +128,93 @@ char *terminal_gets(char *string)
     int cursor_pos = 0;
     int start_x = terminal_x;
     int start_y = terminal_y;
-    
+
     gcursor_show();
-    
+
     keyboard_key_t key = (keyboard_key_t){0};
     while (key.scancode != Enter)
     {
         gcursor_set(start_x + cursor_pos, start_y);
-        
+        gcursor_update();
+
         key = keyboard_input();
-        if (key.scancode == 0)
-            continue;
-            
+        
+        if (key.scancode == 0) {
+            if (serial_received()) {
+                char c = serial_read();
+                if (c == '\r' || c == '\n') {
+                    key.scancode = Enter;
+                    key.character = '\n';
+                } else if (c == '\b' || c == 127) {
+                    key.scancode = Backspace;
+                } else {
+                    key.scancode = char_to_scancode(c);
+                    key.character = c;
+                }
+            } else {
+                continue;
+            }
+        }
+
         switch (key.scancode)
         {
         case LeftArrow:
-            if (cursor_pos > 0) cursor_pos--;
+            if (cursor_pos > 0)
+                cursor_pos--;
             break;
-            
+
         case RightArrow:
-            if (cursor_pos < buf_len) cursor_pos++;
+            if (cursor_pos < buf_len)
+                cursor_pos++;
             break;
-            
+
         case Home:
             cursor_pos = 0;
             break;
-            
+
         case End:
             cursor_pos = buf_len;
             break;
-            
+
         case UpArrow:
+        {
+            const char *prev = history_get_prev();
+            if (prev)
             {
-                const char *prev = history_get_prev();
-                if (prev)
+                if (!is_temp && buf_len > 0)
                 {
-                    if (!is_temp && buf_len > 0)
-                    {
-                        strcpy(temp, buffer);
-                        is_temp = true;
-                    }
-                    clear_text(start_x, start_y, buf_len);
-                    strcpy(buffer, prev);
-                    buf_len = strlen(buffer);
-                    cursor_pos = buf_len;
-                    draw_buffer(start_x, start_y, buffer);
+                    strcpy(temp, buffer);
+                    is_temp = true;
                 }
-            }
-            break;
-            
-        case DownArrow:
-            {
-                const char *next = history_get_next();
                 clear_text(start_x, start_y, buf_len);
-                
-                if (next)
-                {
-                    strcpy(buffer, next);
-                }
-                else
-                {
-                    strcpy(buffer, temp);
-                    is_temp = false;
-                }
+                strcpy(buffer, prev);
                 buf_len = strlen(buffer);
                 cursor_pos = buf_len;
                 draw_buffer(start_x, start_y, buffer);
             }
-            break;
-            
+        }
+        break;
+
+        case DownArrow:
+        {
+            const char *next = history_get_next();
+            clear_text(start_x, start_y, buf_len);
+
+            if (next)
+            {
+                strcpy(buffer, next);
+            }
+            else
+            {
+                strcpy(buffer, temp);
+                is_temp = false;
+            }
+            buf_len = strlen(buffer);
+            cursor_pos = buf_len;
+            draw_buffer(start_x, start_y, buffer);
+        }
+        break;
+
         case Backspace:
             if (cursor_pos > 0)
             {
@@ -205,12 +223,12 @@ char *terminal_gets(char *string)
                 buf_len--;
                 cursor_pos--;
                 buffer[buf_len] = '\0';
-                
+
                 clear_text(start_x, start_y, buf_len);
                 draw_buffer(start_x, start_y, buffer);
             }
             break;
-            
+
         case Delete:
             if (cursor_pos < buf_len)
             {
@@ -218,49 +236,55 @@ char *terminal_gets(char *string)
                     buffer[i] = buffer[i + 1];
                 buf_len--;
                 buffer[buf_len] = '\0';
-                
+
                 clear_text(start_x, start_y, buf_len);
                 draw_buffer(start_x, start_y, buffer);
             }
             break;
-            
+
         case Enter:
+            gcursor_hide();
+            gcursor_update();
             break;
-            
+
         default:
             if (is_key_printable(key) && buf_len < 255)
             {
                 if (buf_len == 255)
                     break;
-                    
+
                 for (int i = buf_len; i > cursor_pos; i--)
                     buffer[i] = buffer[i - 1];
                 buffer[cursor_pos] = key.character;
                 buf_len++;
                 cursor_pos++;
                 buffer[buf_len] = '\0';
-                
+
                 clear_text(start_x, start_y, buf_len);
                 draw_buffer(start_x, start_y, buffer);
             }
+            else if (key.alt)
+            {
+            }
+
             break;
         }
     }
-    
+
     gcursor_hide();
-    
+
     strcpy(string, buffer);
-    
+
     terminal_x = 0;
     terminal_y++;
     serial_write(string);
     putserial('\n');
     terminal_check_position();
-    
+
     if (buf_len > 0)
         history_add(string);
-    
+
     history_reset_position();
-    
+
     return string;
 }

@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include <memory.h>
+#include <string.h>
 
 #define INTEL_MAGIC 0x756e6547
 #define AMD_MAGIC 0x68747541

@@ -9,10 +9,10 @@
 #include <pci.h>
 #include <panic.h>
 #include <pcspeaker.h>
-#include <memory.h>
 #include <mmu/pmm.h>
 #include <mmu/vmm.h>
 
+#include <keyboard.h>
 #include <drivers/ata.h>
 
 #include <alias.h>
@@ -24,6 +24,14 @@ int last_pos;
 void *logo_bmp = NULL;
 static int recursion_depth = 0;
 static int recursion_limit = 32;
+
+void free_args(char **args)
+{
+    if (!args) return;
+    for (int i = 0; args[i] != NULL; i++)
+        free(args[i]);
+    free(args);
+}
 
 char *shell(char *command) // runs commands, returns command result
 {
@@ -89,7 +97,11 @@ char *shell(char *command) // runs commands, returns command result
         args = get_args(command, 4, ' ', 2);
         if (args == NULL)
             goto error_cleanup;
-        result = itoa(atoi(args[0]) + atoi(args[1]), NULL, 10);
+        result = kmalloc(32);
+        
+        int val0 = atoi(args[0]);
+        int val1 = atoi(args[1]);
+        itoa(val0 + val1, result, 10);
     }
     else if (strcmp(command, "aliases") == 0)
     {
@@ -121,8 +133,9 @@ char *shell(char *command) // runs commands, returns command result
     {
         args = get_args(command, 5, ' ', 1);
         if (args == NULL)
-            goto error_cleanup;
-        printf("%s\n", args[0]);
+            printf("\n");
+        else
+            printf("%s\n", args[0]);
     }
     else if (strncmp(command, "error", 5) == 0)
     {
@@ -130,6 +143,17 @@ char *shell(char *command) // runs commands, returns command result
         if (args == NULL)
             goto error_cleanup;
         panic(args[0]);
+    }
+    else if (strcmp(command, "keys") == 0)
+    {
+        printf("Press keys to see their scancodes. Press Esc to exit.\n");
+        keyboard_key_t key = (keyboard_key_t){0};
+        while (key.scancode != Escape)
+        {
+            key = keyboard_input();
+            if (key.scancode != 0)
+                printf("Scancode: 0x%x Character: %c\n", key.scancode, key.character);
+        }
     }
     else if (strncmp(command, "pci", 3) == 0)
     {
@@ -153,8 +177,10 @@ char *shell(char *command) // runs commands, returns command result
         if (args == NULL)
             goto error_cleanup;
         int times = atoi(args[0]);
-        for (int i = 0; i < times; i++)
-            shell(args[1]);
+        for (int i = 0; i < times; i++) {
+            char *res = shell(args[1]);
+            free(res);
+        }
     }
     else if (strncmp(command, "read", 4) == 0)
     {
@@ -192,7 +218,8 @@ char *shell(char *command) // runs commands, returns command result
     }
     else if (strcmp(command, "getpos") == 0)
     {
-        result = itoa(terminal_getpos(), NULL, 10);
+        result = kmalloc(32);
+        itoa(terminal_getpos(), result, 10);
     }
     else if (strcmp(command, "retpos") == 0)
     {
@@ -204,8 +231,10 @@ char *shell(char *command) // runs commands, returns command result
         args = get_args(command, 3, ';', count);
         if (args == NULL)
             goto error_cleanup;
-        for (size_t i = 0; i < count; i++)
-            shell(args[i]);
+        for (size_t i = 0; i < count; i++) {
+            char *res = shell(args[i]);
+            free(res);
+        }
     }
     else if (strncmp(command, "int", 3) == 0)
     {
@@ -223,11 +252,11 @@ char *shell(char *command) // runs commands, returns command result
     {
         if (logo_bmp != NULL)
         {
-            uint32_t scale_y = fb->common.framebuffer_height / terminal_height;
+            uint32_t scale_y = fb_get_height() / terminal_height;
 
             BMPInfoHeader *info = get_bmp_info((const uint8_t *)logo_bmp);
             draw_bmp_at_position((const uint8_t *)logo_bmp,
-                                 fb->common.framebuffer_width - info->width, scale_y * terminal_y);
+                                 fb_get_width() - info->width, scale_y * terminal_y);
             terminal_setpos(0, terminal_y + info->height / scale_y + 1);
         }
         else
@@ -237,7 +266,7 @@ char *shell(char *command) // runs commands, returns command result
     }
     else if (strcmp(command, "video") == 0)
         printf("Display %dx%d at 0x%lx\nTerminal width: %d height: %d\n",
-               fb->common.framebuffer_width, fb->common.framebuffer_height, fb->common.framebuffer_addr,
+               fb_get_width(), fb_get_height(), fb_get_address(),
                terminal_width, terminal_height);
     else if (strncmp(command, "malloc", 6) == 0)
     {
@@ -250,68 +279,102 @@ char *shell(char *command) // runs commands, returns command result
     }
     else if (recursion_depth == 1 && strcmp(command, "exit") != 0 && strcmp(command, "") != 0)
         printf("Unknown command: %s\n", command);
-    else if (strcmp(command, "") != 0)
-        result = command;
+    else if (strcmp(command, "") != 0) {
+        result = kmalloc(strlen(command) + 1);
+        strcpy(result, command);
+    }
 
-    recursion_depth = 0;
-    free(args);
+    recursion_depth--;
+    free_args(args);
     return result;
 
 error_cleanup:
     recursion_depth--;
-    free(args);
-    return "ERROR";
+    free_args(args);
+    char *err = kmalloc(6);
+    strcpy(err, "ERROR");
+    return err;
 }
 char **get_args(char *string, size_t start, char separator, int count)
-{ // `arg` in evaluated
+{
     size_t length = strlen(string);
-    size_t offset = sizeof(char *) * count;
-    char **args = kmalloc(offset + length);
-
     if (length <= start)
         goto args_error;
-    char *strcopy = (void *)((uint64_t)args + offset);
-    memcpy(strcopy, string, length);
-    string = &strcopy[start];
-    int arg_i = 0;
-    size_t prev = 0;
 
+    char **args = kmalloc(sizeof(char *) * (count + 1));
+    char *strcopy = kmalloc(length + 1);
+    strcpy(strcopy, string);
+
+    char *curr = &strcopy[start];
+    int arg_i = 0;
     int arg_variable = 0;
-    for (size_t i = 0; i < length && arg_i < count; i++)
+    char *arg_start = curr;
+
+    for (size_t i = 0; curr[i] != '\0' && arg_i < count; i++)
     {
-        if (string[i] == '[')
+        if (curr[i] == '[')
             arg_variable++;
-        if (string[i] == ']')
+        else if (curr[i] == ']')
             arg_variable--;
+
         if (arg_i == count - 1)
         {
-            args[arg_i++] = &string[prev];
+            args[arg_i++] = arg_start;
             break;
         }
-        if (arg_variable == 0 && (string[i] == separator || i == length - 1))
+
+        if (arg_variable == 0 && curr[i] == separator)
         {
-            string[i] = '\0';
-            args[arg_i++] = &string[prev];
-            prev = i + 1;
+            curr[i] = '\0';
+            args[arg_i++] = arg_start;
+            arg_start = &curr[i + 1];
         }
     }
-    if (arg_i <= count - 1)
-        goto args_error;
+    
+    if (arg_i < count && *arg_start != '\0') {
+        args[arg_i++] = arg_start;
+    }
+    
+    while (arg_i <= count) {
+        args[arg_i++] = NULL;
+    }
 
     for (int i = 0; i < count; i++)
     {
+        if (args[i] == NULL) continue;
         char *cmd = args[i];
-        if (cmd[0] != '[')
-            continue;
-
+        
         size_t len = strlen(cmd);
-        cmd[len - 1] = '\0';
-        args[i] = shell(&cmd[1]);
+        while(len > 0 && cmd[len - 1] == ' ') {
+            cmd[len - 1] = '\0';
+            len--;
+        }
+        
+        while(*cmd == ' ') {
+            cmd++;
+            len--;
+        }
+
+        if (cmd[0] != '[') {
+            char *copy = kmalloc(strlen(cmd) + 1);
+            strcpy(copy, cmd);
+            args[i] = copy;
+            continue;
+        }
+
+        if (len >= 2 && cmd[len - 1] == ']') {
+            cmd[len - 1] = '\0';
+            args[i] = shell(&cmd[1]);
+        } else {
+            char *copy = kmalloc(strlen(cmd) + 1);
+            strcpy(copy, cmd);
+            args[i] = copy;
+        }
     }
+    free(strcopy);
     return args;
 
 args_error:
     printf("Too few arguments. The command needs %d arguments.\n", count);
-    free(args);
     return NULL;
 }

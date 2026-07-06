@@ -1,7 +1,5 @@
 #include <iso9660.h>
 
-#include <memory.h>
-#include <screen.h>
 #include <string.h>
 
 void *const sectorBuffer = (void *)0x20000; // length: 64 KiB

@@ -1,7 +1,7 @@
 #include <keyboard.h>
 #include <stdio.h>
 #include <interrupts.h>
-#include <memory.h>
+#include <string.h>
 #include <io.h>
 
 #define KB_BUFFER_SIZE 128
@@ -48,33 +48,41 @@ bool is_key_letter(keyboard_key_t key)
 {
     return kb_keys[key.scancode] >= 'a' && kb_keys[key.scancode] <= 'z';
 }
+bool is_key_number(keyboard_key_t key)
+{
+    return kb_keys[key.scancode] >= '0' && kb_keys[key.scancode] <= '9';
+}
 keyboard_key_t keyboard_input()
 {
+    uint8_t scancode = key_scancode;
     key_scancode = 0;
-    io_wait();
 
-    keyboard_key_t key = (keyboard_key_t){0};
+    keyboard_key_t key = {0};
 
-    key.ctrl = is_key_pressed(Ctrl);
+    key.ctrl = is_key_pressed(LCtrl) || is_key_pressed(RCtrl);
     key.shift = is_key_pressed(LShift) || is_key_pressed(RShift);
-    key.alt = is_key_pressed(Alt);
+    key.alt = is_key_pressed(LAlt) || is_key_pressed(RAlt);
     key.caps_lock = is_key_pressed(CapsLock);
     key.num_lock = is_key_pressed(NumLock);
     key.scroll_lock = is_key_pressed(ScrollLock);
 
-    key.scancode = key_scancode;
-    key.pressed = is_key_pressed((enum Key)key_scancode);
+    key.scancode = scancode;
+    key.pressed = is_key_pressed((enum Key)scancode);
 
     if (is_key_printable(key))
     {
         if (is_key_letter(key) && key.shift)
-            key.character = kb_keys[key_scancode] + 'A' - 'a';
+            key.character = kb_keys[scancode] + 'A' - 'a';
         else
-            key.character = kb_keys[key_scancode];
+            key.character = kb_keys[scancode];
+    }
+    else if (key.scancode == Tab)
+    {
+        key.character = '\t';
     }
 
-    if (kb_buffer[key_scancode] == KEY_RELEASED)
-        kb_buffer[key_scancode] = 0;
+    if (kb_buffer[scancode] == KEY_RELEASED)
+        kb_buffer[scancode] = 0;
 
     return key;
 }

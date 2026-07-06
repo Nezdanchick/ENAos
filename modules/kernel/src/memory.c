@@ -1,10 +1,13 @@
-#include <memory.h>
+#include <string.h>
+
+#define COMPILER_BARRIER() __asm__ volatile("" : : : "memory")
 
 void *memset(void *buffer, int value, size_t size)
 {
+    unsigned char *p = buffer;
     while (size-- > 0)
     {
-        *(int *)buffer++ = value;
+        *p++ = (unsigned char)value;
     }
     return buffer;
 }
@@ -48,4 +51,8 @@ void *memmove(void *dest, const void *src, size_t n)
             destination[i - 1] = source[i - 1];
     }
     return dest;
+}
+
+static inline bool is_aligned32(const void *ptr) {
+    return ((uintptr_t)ptr & 0x3) == 0;
 }
