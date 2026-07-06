@@ -25,7 +25,7 @@ needed_tools:=nasm clang lld mtools xorriso qemu-system-x86_64 wget
 
 all: check-tools clean build debug
 
-check-tools:
+check-tools: limine
 	@for tool in $(needed_tools); do \
 		if ! which $${tool} >/dev/null 2>&1; then \
 			echo "Error: $${tool} not found in PATH"; \
@@ -43,7 +43,7 @@ $(modules):
 	@mkdir -p $(build_output)
 	@make -C modules/$@ root=$(CURDIR) output=$(CURDIR)/$(build_output) module_makefile=$(CURDIR)/$(module_makefile)
 
-build: $(modules) limine
+build: $(modules)
 	@mkdir -p $(dir $(iso_path))
 	@mkdir -p $(build_output)/boot/limine
 	@cp limine/limine-bios.sys limine/limine-bios-cd.bin limine/limine-uefi-cd.bin $(build_output)/boot/limine/
