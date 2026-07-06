@@ -55,6 +55,11 @@ int terminal_getpos()
 }
 void terminal_check_position()
 {
+    while (terminal_x < 0)
+    {
+        terminal_x += terminal_width;
+        terminal_y--;
+    }
     if (terminal_x >= terminal_width)
     {
         terminal_y += terminal_x / terminal_width;
