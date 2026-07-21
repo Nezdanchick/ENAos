@@ -1,0 +1,33 @@
+clear
+setpos 2 1
+echo === ENAos KERNEL DIAGNOSTIC SUITE ===
+
+echo --- Hardware Polling ---
+cpuid
+video
+
+sleep 3000
+
+echo --- Nested Math & Evaluation Test ---
+var math_res=[add [add 15 25] [add 10 50]]
+echo 15+25 + 10+50 = [math_res]
+
+sleep 3000
+
+echo --- Cursor State Test ---
+var current_cursor=[getpos]
+echo Diagnostics running at terminal offset: [current_cursor]
+
+sleep 3000
+
+echo --- Audiovisual Stress Test ---
+var x=20
+var y=200
+var freq=200
+
+rep 5 do bmp [x] [y] sys/resources/ena.bmp; var x=[add [x] 110]; var y=[add [y] 40]; var freq=[add [freq] 250]; beep [freq] 50
+
+sleep 3000
+
+echo DIAGNOSTICS COMPLETE. ENAos IS ROCK SOLID!
+do beep 523 100; beep 659 100; beep 784 100; beep 1046 300

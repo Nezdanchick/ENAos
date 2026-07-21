@@ -49,7 +49,49 @@ int strcmp(const char *a, const char *b)
     }
     return *(const unsigned char *)a - *(const unsigned char *)b;
 }
+char *strcat(char *dest, const char *src)
+{
+    char *ptr = dest + strlen(dest);
+    while (*src != '\0')
+    {
+        *ptr++ = *src++;
+    }
+    *ptr = '\0';
+    return dest;
+}
+char *strchr(const char *s, int c)
+{
+    while (*s != (char)c) {
+        if (!*s++) {
+            return NULL;
+        }
+    }
+    return (char *)s;
+}
+char *strstr(const char *haystack, const char *needle)
+{
+    if (*needle == '\0')
+        return (char *)haystack;
 
+    while (*haystack)
+    {
+        const char *h = haystack;
+        const char *n = needle;
+
+        while (*h && *n && *h == *n)
+        {
+            h++;
+            n++;
+        }
+
+        if (*n == '\0')
+            return (char *)haystack;
+
+        haystack++;
+    }
+
+    return NULL;
+}
 char *strext(char *destination, char *source, char attribute)
 {
     while (*source != '\0')

@@ -7,6 +7,7 @@
 #include <history.h>
 #include <gcursor.h>
 #include <fb_terminal.h>
+#include <fs/vfs.h>
 
 int terminal_x = 0;
 int terminal_y = 0;
@@ -144,20 +145,29 @@ char *terminal_gets(char *string)
         gcursor_update();
 
         key = keyboard_input();
-        
-        if (key.scancode == 0) {
-            if (serial_received()) {
+
+        if (key.scancode == 0)
+        {
+            if (serial_received())
+            {
                 char c = serial_read();
-                if (c == '\r' || c == '\n') {
+                if (c == '\r' || c == '\n')
+                {
                     key.scancode = Enter;
                     key.character = '\n';
-                } else if (c == '\b' || c == 127) {
+                }
+                else if (c == '\b' || c == 127)
+                {
                     key.scancode = Backspace;
-                } else {
+                }
+                else
+                {
                     key.scancode = char_to_scancode(c);
                     key.character = c;
                 }
-            } else {
+            }
+            else
+            {
                 continue;
             }
         }
@@ -181,6 +191,56 @@ char *terminal_gets(char *string)
         case End:
             cursor_pos = buf_len;
             break;
+
+        case Tab:
+        {
+            int word_start = cursor_pos - 1;
+            while (word_start >= 0 && buffer[word_start] != ' ')
+            {
+                word_start--;
+            }
+            word_start++; // after ' '
+
+            int path_len = cursor_pos - word_start;
+            if (path_len <= 0)
+                break;
+
+            char *path = kmalloc(path_len + 1);
+
+            for (int i = 0; i < path_len; i++)
+            {
+                path[i] = buffer[word_start + i];
+            }
+            path[path_len] = '\0';
+
+            char *full_path = vfs_strncmp(path, path_len);
+            size_t old_buf_len = buf_len;
+
+            if (full_path)
+            {
+                size_t len = strlen(full_path);
+
+                for (size_t i = path_len; i < len; i++)
+                {
+                    if (buf_len >= 255)
+                        break;
+
+                    for (int j = buf_len; j > cursor_pos; j--)
+                    {
+                        buffer[j] = buffer[j - 1];
+                    }
+                    buffer[cursor_pos++] = full_path[i];
+                    buf_len++;
+                }
+                buffer[buf_len] = '\0';
+
+                clear_text(start_x, start_y, old_buf_len);
+                draw_buffer(start_x, start_y, buffer);
+            }
+
+            free(path);
+            break;
+        }
 
         case UpArrow:
         {

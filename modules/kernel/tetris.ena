@@ -1,0 +1,257 @@
+clear
+echo === ENAos TETRIS ===
+echo A/D - Move | S - Drop | W - Rotate | Esc - Quit
+sleep 2000
+
+// setup board dimensions
+var board_x = 10
+var board_y = 5
+
+// init empty board array (10x20 = 200 blocks)
+var i = 0
+while [lt [i] 200] [
+    var b[i] = 0
+    var i = [add [i] 1]
+]
+
+// define pieces (square, line, t-piece, z-piece) and their rotations
+var p0_0[] = 0 0 1 0 0 1 1 1
+
+var p1_0[] = 0 0 0 1 0 2 0 3
+var p1_1[] = 0 0 1 0 2 0 3 0
+
+var p2_0[] = 1 0 0 1 1 1 2 1
+var p2_1[] = 1 0 1 1 2 1 1 2
+var p2_2[] = 0 1 1 1 2 1 1 2
+var p2_3[] = 1 0 0 1 1 1 1 2
+
+var p3_0[] = 1 0 2 0 0 1 1 1
+var p3_1[] = 0 0 0 1 1 1 1 2
+
+// max rotations per piece type
+var m_rot[] = 1 2 4 2
+
+// current piece state
+var px = 4
+var py = 0
+var p_id = [rand 0 3]
+var rot = 0
+
+// game state variables
+var is_playing = 1
+var tick = 0
+var redraw = 1
+var score = 0
+
+// main game loop
+while [is_playing] [
+    var key = [getkey]
+    var dx = 0
+    var dy = 0
+
+    // check input keys
+    if [eq [key] 30] [var dx = -1]
+    if [eq [key] 32] [var dx = 1]
+    if [eq [key] 31] [var dy = 1]
+    if [eq [key] 1]  [var is_playing = 0]
+    
+    // rotation logic
+    if [eq [key] 17] [
+        var max_rot = [m_rot[p_id]]
+        var test_rot = [add [rot] 1]
+        if [eq [test_rot] [max_rot]] [
+            var test_rot = 0
+        ]
+        
+        var col = 0
+        var i = 0
+        while [lt [i] 8] [
+            var bx = [add [px] [p[p_id]_[test_rot][i]]]
+            var by = [add [py] [p[p_id]_[test_rot][add [i] 1]]]
+            if [lt [bx] 0] [var col = 1]
+            if [gt [bx] 9] [var col = 1]
+            if [gt [by] 19] [var col = 1]
+            if [lt [col] 1] [
+                var b_idx = [add [mul [by] 10] [bx]]
+                if [eq [b[b_idx]] 1] [var col = 1]
+            ]
+            var i = [add [i] 2]
+        ]
+        if [eq [col] 0] [
+            var rot = [test_rot]
+            var redraw = 1
+        ]
+    ]
+
+    // gravity tick
+    var tick = [add [tick] 1]
+    if [gt [tick] 10] [
+        var dy = 1
+        var tick = 0
+    ]
+
+    // horizontal movement
+    if [neq [dx] 0] [
+        var test_x = [add [px] [dx]]
+        var col = 0
+        var i = 0
+        while [lt [i] 8] [
+            var bx = [add [test_x] [p[p_id]_[rot][i]]]
+            var by = [add [py] [p[p_id]_[rot][add [i] 1]]]
+            if [lt [bx] 0] [var col = 1]
+            if [gt [bx] 9] [var col = 1]
+            if [lt [col] 1] [
+                var b_idx = [add [mul [by] 10] [bx]]
+                if [eq [b[b_idx]] 1] [var col = 1]
+            ]
+            var i = [add [i] 2]
+        ]
+        if [eq [col] 0] [
+            var px = [test_x]
+            var redraw = 1
+        ]
+    ]
+
+    // vertical movement and locking
+    if [gt [dy] 0] [
+        var test_y = [add [py] [dy]]
+        var col = 0
+        var i = 0
+        while [lt [i] 8] [
+            var bx = [add [px] [p[p_id]_[rot][i]]]
+            var by = [add [test_y] [p[p_id]_[rot][add [i] 1]]]
+            if [gt [by] 19] [var col = 1]
+            if [lt [col] 1] [
+                var b_idx = [add [mul [by] 10] [bx]]
+                if [eq [b[b_idx]] 1] [var col = 1]
+            ]
+            var i = [add [i] 2]
+        ]
+
+        if [eq [col] 0] [
+            var py = [test_y]
+            var redraw = 1
+        ]
+
+        // lock piece if collision detected
+        if [eq [col] 1] [
+            var i = 0
+            while [lt [i] 8] [
+                var bx = [add [px] [p[p_id]_[rot][i]]]
+                var by = [add [py] [p[p_id]_[rot][add [i] 1]]]
+                var b_idx = [add [mul [by] 10] [bx]]
+                var b[b_idx] = 1
+                var i = [add [i] 2]
+            ]
+
+            // line clearing logic
+            var ly = 19
+            var lines_cleared = 0
+            while [gt [ly] 0] [
+                var lx = 0
+                var full = 1
+                while [lt [lx] 10] [
+                    var b_idx = [add [mul [ly] 10] [lx]]
+                    if [eq [b[b_idx]] 0] [var full = 0]
+                    var lx = [add [lx] 1]
+                ]
+
+                if [eq [full] 1] [
+                    var lines_cleared = [add [lines_cleared] 1]
+                    var cy = [ly]
+                    while [gt [cy] 0] [
+                        var cx = 0
+                        while [lt [cx] 10] [
+                            var cur_idx = [add [mul [cy] 10] [cx]]
+                            var prev_idx = [add [mul [add [cy] -1] 10] [cx]]
+                            var b[cur_idx] = [b[prev_idx]]
+                            var cx = [add [cx] 1]
+                        ]
+                        var cy = [add [cy] -1]
+                    ]
+                ]
+                if [eq [full] 0] [var ly = [add [ly] -1]]
+            ]
+
+            // update score
+            if [gt [lines_cleared] 0] [
+                var score = [add [score] [mul [lines_cleared] 10]]
+            ]
+
+            // spawn new piece
+            var px = 4
+            var py = 0
+            var p_id = [rand 0 3]
+            var rot = 0
+            var redraw = 1
+
+            // check game over collision
+            var col_spawn = 0
+            var i = 0
+            while [lt [i] 8] [
+                var bx = [add [px] [p[p_id]_[rot][i]]]
+                var by = [add [py] [p[p_id]_[rot][add [i] 1]]]
+                var b_idx = [add [mul [by] 10] [bx]]
+                if [eq [b[b_idx]] 1] [var col_spawn = 1]
+                var i = [add [i] 2]
+            ]
+            if [eq [col_spawn] 1] [var is_playing = 0]
+        ]
+    ]
+
+    // render frame if needed
+    if [eq [redraw] 1] [
+        clear
+        
+        // draw board walls and locked blocks
+        var by = 0
+        while [lt [by] 20] [
+            setpos [add [board_x] -1] [add [board_y] [by]]
+            echo |
+            setpos [add [board_x] 10] [add [board_y] [by]]
+            echo |
+            var bx = 0
+            while [lt [bx] 10] [
+                var b_idx = [add [mul [by] 10] [bx]]
+                if [eq [b[b_idx]] 1] [
+                    setpos [add [board_x] [bx]] [add [board_y] [by]]
+                    echo #
+                ]
+                var bx = [add [bx] 1]
+            ]
+            var by = [add [by] 1]
+        ]
+        
+        // draw bottom wall
+        var bx = 0
+        while [lt [bx] 10] [
+            setpos [add [board_x] [bx]] [add [board_y] 20]
+            echo =
+            var bx = [add [bx] 1]
+        ]
+
+        // draw current piece
+        var i = 0
+        while [lt [i] 8] [
+            var bx = [add [px] [p[p_id]_[rot][i]]]
+            var by = [add [py] [p[p_id]_[rot][add [i] 1]]]
+            setpos [add [board_x] [bx]] [add [board_y] [by]]
+            echo #
+            var i = [add [i] 2]
+        ]
+        
+        // draw score and instructions
+        setpos 22 6
+        echo SCORE: [score]
+        
+        var redraw = 0
+    ]
+
+    // delay
+    sleep 50
+]
+
+// game over screen
+clear
+echo Game Over
+echo Final Score: [score]

@@ -52,7 +52,3 @@ void *memmove(void *dest, const void *src, size_t n)
     }
     return dest;
 }
-
-static inline bool is_aligned32(const void *ptr) {
-    return ((uintptr_t)ptr & 0x3) == 0;
-}

@@ -1,0 +1,5 @@
+clear
+bmp [add [FBWIDTH] -120] 0 /sys/resources/ena.bmp
+about
+echo Welcome to ENAos!
+echo Type 'help' for a list of commands

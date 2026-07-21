@@ -44,19 +44,22 @@ static inline void put_pixel_fast(uint32_t x, uint32_t y, uint32_t color)
     *pixel = color;
 }
 
+#define FB_VIRT_ADDR 0xFFFF800000000000ULL
+
 void init_framebuffer(struct multiboot_tag_framebuffer *fbtag)
 {
     if (!fbtag)
         return;
 
     fb_ctx.phys_addr = fbtag->common.framebuffer_addr;
-    fb_ctx.buffer = (uint8_t *)fb_ctx.phys_addr;
     fb_ctx.width = fbtag->common.framebuffer_width;
     fb_ctx.height = fbtag->common.framebuffer_height;
     fb_ctx.pitch = fbtag->common.framebuffer_pitch;
     fb_ctx.size = (uint64_t)fb_ctx.pitch * fb_ctx.height;
 
-    recursive_map(fb_ctx.phys_addr, fb_ctx.phys_addr, fb_ctx.size);
+    // Use a constant high virtual address
+    fb_ctx.buffer = (uint8_t *)FB_VIRT_ADDR;
+    recursive_map(fb_ctx.phys_addr, FB_VIRT_ADDR, fb_ctx.size);
 }
 
 void fb_put_pixel(uint32_t x, uint32_t y, uint32_t color)

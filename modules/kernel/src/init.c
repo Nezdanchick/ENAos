@@ -2,11 +2,10 @@
 
 void module_load(struct multiboot_tag_module *module)
 {
-    // Placeholder for module loading logic
     printf("Loading module at 0x%x of size 0x%x bytes\ncmd: %s\n", module->mod_start, module->mod_end - module->mod_start, module->cmdline);
-    if (strcmp(module->cmdline, "logo") == 0)
+    if (strcmp(module->cmdline, "initramfs") == 0)
     {
-        logo_bmp = (void *)(uintptr_t)(module->mod_start);
+        init_cpio((uint8_t *)(uintptr_t)module->mod_start);
     }
 }
 
@@ -16,7 +15,7 @@ void init(uint32_t multiboot_addr, uint32_t multiboot_magic)
 
     init_pmm();
     init_screen();
-    init_fs();
+    init_vfs();
 
     init_interrupts();
 

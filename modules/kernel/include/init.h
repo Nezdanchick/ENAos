@@ -39,7 +39,8 @@
 #include <framebuffer.h>
 
 // fs
-#include <fs/fs.h>
+#include <fs/cpio.h>
+#include <fs/vfs.h>
 
 // task sheduler
 #include <task_sheduler.h>

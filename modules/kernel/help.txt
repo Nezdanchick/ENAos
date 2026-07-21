@@ -1,0 +1,35 @@
+### Default Commands ###
+about - show system info
+add(a, b) - returns a + b
+aliases - show variables
+beep(length) - make a sound
+clear - clear screen
+cpuid - show CPU info
+echo(text) - print text to screen
+logo - show os logo
+lspci - show all pci devices
+lsusb - show all usb devices
+video - show display info
+
+### Debug ###
+error(text) - print error message an halt
+pci(bus, slot, func) - show pci info
+setrecursionlimit(limit) - set shell recursion limit
+malloc(size) - allocate size of memory
+free - free last memory allocation
+exit - qemu shutdown
+
+### Cursor ###
+setpos(x, y) - set position of cursor
+retpos - set position to previous
+getpos - return position of cursor
+### Operators ###
+do(...) - run commands one after another separated by ';'
+rep(n, command) - repeat command n times
+var name=command - simplify some commands or create variable
+[command] - evaluate command
+
+### Info ###
+func(a, b, c) means the number and purpose of arguments.
+Arguments should be entered without parentheses and separated by a space.
+Command, that return something can be used in eval

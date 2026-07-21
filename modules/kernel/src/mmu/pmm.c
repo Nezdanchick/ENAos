@@ -98,6 +98,10 @@ bitmap_block_t *pmm_create_block(uint64_t size)
     }
     bitmap_block_t *block = &bitmap->blocks[bitmap->info.index];
 
+    uint16_t prev_bn = (bitmap->info.index > 0) ? BLOCK_NUMBER(bitmap->info.flags[bitmap->info.index - 1]) : 0xFFFF;
+    while (bitmap->info.block_number == prev_bn)
+        bitmap->info.block_number++;
+
     for (uint64_t i = 0; i < count; i++)
     {
         bitmap->info.flags[i + bitmap->info.index] = (uint32_t)(bitmap->info.block_number << 16) | PRESENT_FLAG;
@@ -134,9 +138,15 @@ void pmm_free_block(void *ptr)
     uint16_t number = BLOCK_NUMBER(bitmap->info.flags[index]);
 
     if (!(bitmap->info.flags[index] & PRESENT_FLAG))
-        panic("Not present at 0x%lx; flags: 0x%lx", ptr, bitmap->info.flags[index]);
+    {
+        printf("Not present at 0x%lx, ret: %p\n", ptr, __builtin_return_address(0));
+        return;
+    }
     if (bitmap->info.flags[index] & FREE_FLAG)
-        panic("Already free at 0x%lx, flag: 0x%lx", ptr, bitmap->info.flags[index]);
+    {
+        printf("Already free at 0x%lx, ret: %p\n", ptr, __builtin_return_address(0));
+        return;
+    }
 
     for (size_t i = index; i < BITMAP_BLOCKS; i++)
     {
@@ -168,9 +178,14 @@ bitmap_block_t *pmm_search_free_block(uint64_t size)
             }
             if (++free_count == need_blocks)
             { // found
+                uint16_t prev_bn = (i - need_blocks + 1 > 0) ? BLOCK_NUMBER(bitmap->info.flags[i - need_blocks]) : 0xFFFF;
+                uint16_t next_bn = (i + 1 < BITMAP_BLOCKS) ? BLOCK_NUMBER(bitmap->info.flags[i + 1]) : 0xFFFF;
+                while (bitmap->info.block_number == prev_bn || bitmap->info.block_number == next_bn)
+                    bitmap->info.block_number++;
+
+                block = &bitmap->blocks[i - need_blocks + 1];
                 for (size_t j = i - need_blocks + 1; j <= i; j++)
                 { // foreach free block
-                    block = &bitmap->blocks[j];
                     bitmap->info.flags[j] = (uint32_t)(bitmap->info.block_number << 16) | PRESENT_FLAG;
                     bitmap->blocks[j] = (bitmap_block_t){0};
                 }

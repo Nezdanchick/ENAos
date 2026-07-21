@@ -1,6 +1,7 @@
 iso_path=bin/ENAos.iso
 
-build_output:=iso
+build_output:=initramfs_root
+iso:=iso_root
 module_makefile:=module.Makefile
 
 priority_modules:=test global
@@ -21,7 +22,15 @@ qemu:=qemu-system-x86_64 -no-reboot \
     -drive if=none,id=usbstick,file=$(iso_path),format=raw \
     -device usb-storage,drive=usbstick
 
-needed_tools:=nasm clang lld mtools xorriso qemu-system-x86_64 wget
+needed_tools:=nasm clang lld mtools xorriso qemu-system-x86_64 wget cpio
+
+ifndef NO_UEFI
+XORRISO_UEFI_FLAGS = --efi-boot boot/limine/limine-uefi-cd.bin -efi-boot-part --efi-boot-image --protective-msdos-label
+LIMINE_UEFI_BIN = limine/limine-uefi-cd.bin
+else
+XORRISO_UEFI_FLAGS =
+LIMINE_UEFI_BIN =
+endif
 
 all: check-tools clean build debug
 
@@ -41,17 +50,18 @@ limine:
 
 $(modules):
 	@mkdir -p $(build_output)
-	@make -C modules/$@ root=$(CURDIR) output=$(CURDIR)/$(build_output) module_makefile=$(CURDIR)/$(module_makefile)
+	@mkdir -p $(iso)
+	@make -C modules/$@ root=$(CURDIR) output=$(CURDIR)/$(build_output) iso=$(CURDIR)/$(iso) module_makefile=$(CURDIR)/$(module_makefile)
 
-build: $(modules)
+build: $(modules) limine
 	@mkdir -p $(dir $(iso_path))
-	@mkdir -p $(build_output)/boot/limine
-	@cp limine/limine-bios.sys limine/limine-bios-cd.bin limine/limine-uefi-cd.bin $(build_output)/boot/limine/
+	@mkdir -p $(iso)/boot/limine
+	@cp limine/limine-bios.sys limine/limine-bios-cd.bin $(LIMINE_UEFI_BIN) $(iso)/boot/limine/
+	@cd $(build_output) && find . -print0 | cpio --null -o --format=newc > ../$(iso)/boot/enaramfs.cpio 2>/dev/null
 	@xorriso -as mkisofs -b boot/limine/limine-bios-cd.bin \
 		-no-emul-boot -boot-load-size 4 -boot-info-table \
-		--efi-boot boot/limine/limine-uefi-cd.bin \
-		-efi-boot-part --efi-boot-image --protective-msdos-label \
-		$(build_output) -o $(iso_path) > /dev/null 2>&1
+		$(XORRISO_UEFI_FLAGS) \
+		$(iso) -o $(iso_path) > /dev/null 2>&1
 	@./limine/limine bios-install $(iso_path) > /dev/null 2>&1
 
 
@@ -61,11 +71,12 @@ debug:
 
 clean:
 	@rm -rf bin
-	@rm -rf $(output)
+	@rm -rf $(build_output)
+	@rm -rf $(iso)
 
 clean-modules:
 	@for module in $(modules); do \
 		rm -r modules/$$module/obj > /dev/null 2>&1 || true; \
 	done
 
-.PHONY: all build debug clean clean_modules $(modules)
+.PHONY: all check-tools limine build debug clean clean_modules $(modules)
