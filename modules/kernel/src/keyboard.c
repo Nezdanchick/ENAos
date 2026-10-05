@@ -19,6 +19,17 @@ char kb_keys[] = " " // zero
                  "   "   // empty
                  "??"    // f11, f12
                  "    "; // empty
+                 
+char kb_keys_shift[] = " " // zero
+                 "?!@#$%^&*()_+??"
+                 "QWERTYUIOP{}??"
+                 "ASDFGHJKL:\"~?|"
+                 "ZXCVBNM<>??*? ?"
+                 "????????????" // f1-f10
+                 "??7894561230."
+                 "   "   // empty
+                 "??"    // f11, f12
+                 "    "; // empty
 
 uint8_t kb_buffer[KB_BUFFER_SIZE];
 uint8_t key_scancode;
@@ -27,7 +38,7 @@ int char_to_scancode(char character)
 {
     for (int i = 0; i < 94; i++)
     {
-        if (kb_keys[i] == character)
+        if (kb_keys[i] == character || kb_keys_shift[i] == character)
             return i;
     }
     return 0;
@@ -71,8 +82,8 @@ keyboard_key_t keyboard_input()
 
     if (is_key_printable(key))
     {
-        if (is_key_letter(key) && key.shift)
-            key.character = kb_keys[scancode] + 'A' - 'a';
+        if (key.shift)
+            key.character = kb_keys_shift[scancode];
         else
             key.character = kb_keys[scancode];
     }

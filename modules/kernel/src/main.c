@@ -17,7 +17,7 @@ void kmain()
     set_alias("FBHEIGHT", itoa(fb_get_height(), h_str, 10));
     free(h_str);
 
-    char *res1 = evaluate("sh /sys/init.ena");
+    char *res1 = evaluate("init");
     free(res1);
 
     timer_add_callback(gcursor_blink, 1000);

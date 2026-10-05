@@ -4,7 +4,7 @@ build_output:=initramfs_root
 iso:=iso_root
 module_makefile:=module.Makefile
 
-priority_modules:=test global
+priority_modules:=global
 
 modules_all:=$(patsubst modules/%,%,$(wildcard modules/*))
 

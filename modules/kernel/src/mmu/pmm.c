@@ -12,13 +12,13 @@
 #define BITMAP_SIZE sizeof(bitmap_t)
 #define RESERVE_BLOCKS 4
 
-#define PRESENT_FLAG 0b0001
-#define FREE_FLAG 0b0010
-#define VMM_FLAG 0b0100
+#define PRESENT_FLAG (1 << 0)
+#define FREE_FLAG (1 << 1)
+#define VMM_FLAG (1 << 2)
 #define BLOCK_NUMBER(flag) (flag >> 16)
 
 // ## BLOCK_NUMBER ###### FLAGS ######
-// #     16 BIT     #..............FP#
+// #     16 BIT     #.............VFP#
 // ##################fedcba9876543210#
 //
 // BLOCK_NUMBER the same for one bunch of blocks
@@ -77,6 +77,8 @@ bitmap_t *pmm_create_bitmap()
     {
         bitmap->info.flags[i] |= FREE_FLAG;
     }
+
+    last_bitmap = bitmap;
 
     heap_pointer += BITMAP_SIZE;
     recursive_map(heap_pointer, heap_pointer, BITMAP_SIZE);
@@ -139,13 +141,11 @@ void pmm_free_block(void *ptr)
 
     if (!(bitmap->info.flags[index] & PRESENT_FLAG))
     {
-        printf("Not present at 0x%lx, ret: %p\n", ptr, __builtin_return_address(0));
-        return;
+        panic("Not present at 0x%lx, ret: %p\n", ptr, __builtin_return_address(0));
     }
     if (bitmap->info.flags[index] & FREE_FLAG)
     {
-        printf("Already free at 0x%lx, ret: %p\n", ptr, __builtin_return_address(0));
-        return;
+        panic("Already free at 0x%lx, ret: %p\n", ptr, __builtin_return_address(0));
     }
 
     for (size_t i = index; i < BITMAP_BLOCKS; i++)
@@ -191,9 +191,7 @@ bitmap_block_t *pmm_search_free_block(uint64_t size)
                 }
                 bitmap->info.block_number++;
                 memset(&bitmap->blocks[i - need_blocks + 1], 0, BLOCK_SIZE * need_blocks);
-                if (i == index)
-                    bitmap->info.index -= need_blocks;
-                break;
+                return block;
             }
         }
     }

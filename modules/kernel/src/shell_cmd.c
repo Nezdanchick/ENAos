@@ -28,11 +28,31 @@ char *execute_builtin(char *command)
 {
     char **args = NULL;
     char *result = kmalloc(512);
+    size_t cmd_len = strlen(command);
     result[0] = '\0';
 
-    if (strcmp(command, "help") == 0)
+    char *path = kmalloc(cmd_len + 6);
+    strcat(path, "/bin/");
+    strcat(path, command);
+    vfs_node_t *file = vfs_find(path);
+    free(path);
+
+    if (file)
     {
-        char *help_res = execute_builtin("cat sys/resourses/help.txt");
+        char *cmd = kmalloc(cmd_len + 9);
+        strcat(cmd, "sh /bin/");
+        strcat(cmd, command);
+        char *res = execute_builtin(cmd);
+        free(cmd);
+        if (res)
+        {
+            strcpy(result, res);
+            free(res);
+        }
+    }
+    else if (strcmp(command, "help") == 0)
+    {
+        char *help_res = execute_builtin("cat sys/resources/help.txt");
         if (help_res)
         {
             strcpy(result, help_res);
@@ -43,11 +63,9 @@ char *execute_builtin(char *command)
     {
         printf("ENAos\n\nSystem info:\n");
         char *cpuid_res = evaluate("cpuid");
-        if (cpuid_res)
-            free(cpuid_res);
+        free(cpuid_res);
         char *video_res = evaluate("video");
-        if (video_res)
-            free(video_res);
+        free(video_res);
         printf("Date of build is %s\n", __DATE__);
     }
     else if (strncmp(command, "add", 3) == 0)
@@ -65,6 +83,22 @@ char *execute_builtin(char *command)
         free(eval);
 
         itoa(val0 + val1, result, 10);
+    }
+    else if (strncmp(command, "mul", 3) == 0)
+    {
+        args = get_args(command, 4, ' ', 2);
+        if (args == NULL)
+            goto error_cleanup;
+
+        char *eval = eval_string(args[0]);
+        int val0 = atoi(eval);
+        free(eval);
+
+        eval = eval_string(args[1]);
+        int val1 = atoi(eval);
+        free(eval);
+
+        itoa(val0 * val1, result, 10);
     }
     else if (strcmp(command, "aliases") == 0)
     {
@@ -114,8 +148,7 @@ char *execute_builtin(char *command)
                 if (token)
                     next_token = strchr(token, ' ');
             }
-            if (evaluated_val)
-                free(evaluated_val);
+            free(evaluated_val);
         }
         else
         {
@@ -294,6 +327,25 @@ char *execute_builtin(char *command)
                 free(evaluated);
         }
     }
+    else if (strncmp(command, "empty", 5) == 0)
+    {
+        args = get_args(command, 6, ' ', 2);
+        if (args == NULL)
+            goto error_cleanup;
+
+        int pos = terminal_getpos();
+        char *eval_x = eval_string(args[0]);
+        int x = atoi(eval_x);
+        free(eval_x);
+
+        char *eval_y = eval_string(args[1]);
+        int y = atoi(eval_y);
+        free(eval_y);
+
+        terminal_setpos(x, y);
+        terminal_backspace();
+        terminal_setpos(pos, 0);
+    }
     else if (strncmp(command, "error", 5) == 0)
     {
         args = get_args(command, 6, ' ', 1);
@@ -428,7 +480,8 @@ char *execute_builtin(char *command)
         if (args == NULL)
             goto error_cleanup;
 
-        while (true)
+        keyboard_key_t key = keyboard_input();
+        while (!key.ctrl && key.scancode != C)
         {
             char *eval_cond = eval_string(args[0]);
             int cond = atoi(eval_cond);
@@ -439,8 +492,7 @@ char *execute_builtin(char *command)
                 break;
 
             char *res = evaluate(args[1]);
-            if (res)
-                free(res);
+            free(res);
         }
     }
     else if (strncmp(command, "int", 3) == 0)
@@ -464,6 +516,7 @@ char *execute_builtin(char *command)
         args = get_args(command, 3, ' ', 1);
         if (args == NULL)
             goto error_cleanup;
+
         vfs_node_t *file = vfs_find(args[0]);
         if (file)
         {
@@ -479,13 +532,14 @@ char *execute_builtin(char *command)
             script_buf[real_len] = '\0';
 
             char *res = evaluate(script_buf);
-            if (res)
-                free(res);
+            free(res);
 
             free(script_buf);
         }
         else
+        {
             printf("File not found: %s\n", args[0]);
+        }
     }
     else if (strncmp(command, "bmp", 3) == 0)
     {
@@ -526,32 +580,6 @@ char *execute_builtin(char *command)
                 printf("%s\n", file->name);
         }
     }
-    else if (strncmp(command, "mul", 3) == 0)
-    {
-        args = get_args(command, 4, ' ', 2);
-        if (args == NULL)
-            goto error_cleanup;
-
-        char *eval = eval_string(args[0]);
-        int val0 = atoi(eval);
-        free(eval);
-
-        eval = eval_string(args[1]);
-        int val1 = atoi(eval);
-        free(eval);
-
-        itoa(val0 * val1, result, 10);
-    }
-    else if (strncmp(command, "go", 2) == 0)
-    {
-        args = get_args(command, 3, ' ', 1);
-        if (args == NULL)
-            goto error_cleanup;
-
-        char *res = evaluate(args[0]);
-        if (res)
-            free(res);
-    }
     else if (recursion_depth == 1 && strcmp(command, "exit") != 0 && strcmp(command, "") != 0)
         printf("Unknown command: %s\n", command);
     else if (strcmp(command, "") != 0)
@@ -562,15 +590,13 @@ char *execute_builtin(char *command)
         strcpy(result, command);
     }
 
-    if (args)
-        free_args(args);
+    free_args(args);
     return result;
 
 error_cleanup:
     free_args(args);
     char *err = kmalloc(6);
     strcpy(err, "ERROR");
-    if (result)
-        free(result);
+    free(result);
     return err;
 }

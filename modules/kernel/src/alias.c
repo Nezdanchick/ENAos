@@ -13,6 +13,10 @@ void init_alias()
 {
     alias_count = 0;
 }
+int get_alias_count()
+{
+    return alias_count;
+}
 
 void set_alias(char *alias, char *command)
 {
