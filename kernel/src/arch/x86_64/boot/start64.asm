@@ -1,0 +1,29 @@
+global start64
+
+extern stack_top
+extern kmain
+
+section .boot.text
+bits 64
+
+start64:
+    mov ax, 0x10    ; data segment
+    mov ss, ax
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+
+    ; ; multiboot values are 32 bit size
+    mov edi, [abs stack_top - 4]    ; multiboot2 address
+    mov esi, [abs stack_top - 8]    ; multiboot2 magic
+    add rsp, 8                      ; clear stack
+
+    mov rax, 0xFFFFFFFF80000000
+    add rsp, rax
+
+	call kmain   ; (dword addr, dword magic)
+
+.halt:
+    hlt
+    jmp .halt
