@@ -1,7 +1,6 @@
 #include <stddef.h>
 #include "isrs.h"
-#include "screen.h"
-#include "serial.h"
+#include "panic.h"
 
 static char *exception_name[] = {
     "Division Error",
@@ -62,18 +61,7 @@ void handle_interrupt(uint8_t interrupt, uint64_t error_code, cpu_context_t *con
         }
         else
         {
-            serial_write("\r\n!!! EXCEPTION: ");
-            serial_write(exception_name[interrupt]);
-            serial_write(" !!!\r\n");
-
-            screen_write("\n!!! EXCEPTION: ");
-            screen_write(exception_name[interrupt]);
-            screen_write(" !!!\n");
-
-            while (1)
-            {
-                __asm__ volatile("hlt");
-            }
+            panic_context(exception_name[interrupt], context);
         }
     }
     else

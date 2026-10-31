@@ -33,9 +33,11 @@ iso_build("${ISO_IMAGE}")
 
 add_custom_target(run
     DEPENDS iso
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMAND qemu-system-x86_64
             -cdrom ${ISO_IMAGE}
-            -serial stdio
+            -chardev stdio,id=char0,logfile=qemu.log
+            -serial chardev:char0
             -m 256M
             -no-reboot
             -no-shutdown

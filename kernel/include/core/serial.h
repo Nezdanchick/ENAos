@@ -6,3 +6,4 @@
 int serial_init(enum Port port);
 void serial_putc(char c);
 void serial_write(char *string);
+void serial_formatted(const char *fmt, ...);
