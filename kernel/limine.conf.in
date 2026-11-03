@@ -1,0 +1,22 @@
+timeout: 1
+default_entry: 1
+
+${BOOT}=boot():/boot
+
+/@OS_NAME@ @OS_VERSION@ (Text Mode)
+    protocol: multiboot2
+    kernel_path: ${BOOT}/@KERNEL_NAME@
+    textmode: yes
+    module_path: ${BOOT}/@INIT_NAME@
+    module_string: init
+    module_path: ${BOOT}/@INITRAMFS_NAME@
+    module_string: initramfs
+
+/@OS_NAME@ @OS_VERSION@ (Graphics)
+    protocol: multiboot2
+    kernel_path: ${BOOT}/@KERNEL_NAME@
+    textmode: no
+    module_path: ${BOOT}/@INIT_NAME@
+    module_string: init
+    module_path: ${BOOT}/@INITRAMFS_NAME@
+    module_string: initramfs

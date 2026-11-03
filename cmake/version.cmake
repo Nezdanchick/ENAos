@@ -1,0 +1,5 @@
+set(OS_NAME "ENAos")
+set(OS_VERSION "0.1.0")
+set(KERNEL_NAME "shepherd.elf")
+set(INIT_NAME "boss.bin")
+set(INITRAMFS_NAME "hourglass.cpio")

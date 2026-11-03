@@ -4,15 +4,23 @@ if(NOT CMAKE_C_COMPILER)
     set(CMAKE_C_COMPILER clang)
 endif()
 
-project(ENAos LANGUAGES C ASM_NASM)
+include(cmake/version.cmake)
+
+project(${OS_NAME} LANGUAGES C ASM_NASM)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
+
+add_compile_definitions(
+    OS_NAME="${OS_NAME}"
+    OS_VERSION="${OS_VERSION}"
+)
 
 include(cmake/arch.cmake)
 include(cmake/iso.cmake)
 include(cmake/cpio.cmake)
 include(cmake/limine.cmake)
+include(cmake/userspace.cmake)
 
 add_subdirectory(kernel)
 
@@ -24,19 +32,18 @@ foreach(DIR ${USERSPACE_DIRS})
     endif()
 endforeach()
 
-set(ISO_ROOT "${CMAKE_BINARY_DIR}/iso_root")
-set(ISO_IMAGE "${CMAKE_BINARY_DIR}/ENAos.iso")
-set(CPIO_ARCHIVE "${ISO_ROOT}/boot/initramfs.cpio")
+set(ISO_IMAGE "${CMAKE_BINARY_DIR}/${OS_NAME}.iso")
+set(CPIO_ARCHIVE "${CMAKE_BINARY_DIR}/${INITRAMFS_NAME}")
 
 cpio_build("${CPIO_ARCHIVE}")
+iso_add("${CPIO_ARCHIVE}" "boot/${INITRAMFS_NAME}")
 iso_build("${ISO_IMAGE}")
 
 add_custom_target(run
     DEPENDS iso
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    COMMAND qemu-system-x86_64
+    COMMAND ${QEMU_BIN}
             -cdrom ${ISO_IMAGE}
-            -chardev stdio,id=char0,logfile=qemu.log
+            -chardev stdio,id=char0,logfile=${CMAKE_BINARY_DIR}/qemu.log
             -serial chardev:char0
             -m 256M
             -no-reboot

@@ -8,6 +8,8 @@ file(GLOB ARCH_SOURCES CONFIGURE_DEPENDS
 
 add_executable(kernel ${CORE_SOURCES} ${ARCH_SOURCES})
 
+set_target_properties(kernel PROPERTIES OUTPUT_NAME "${KERNEL_NAME}")
+
 target_compile_options(kernel PRIVATE ${KERNEL_C_FLAGS})
 target_link_options(kernel PRIVATE 
     -fuse-ld=lld 
@@ -22,5 +24,7 @@ target_include_directories(kernel PRIVATE
     include/arch/${ARCH}
 )
 
-iso_add(kernel "boot/kernel.elf")
-iso_add(limine.conf "boot/limine.conf")
+configure_file(limine.conf.in ${CMAKE_CURRENT_BINARY_DIR}/limine.conf @ONLY)
+
+iso_add(kernel "boot/${KERNEL_NAME}")
+iso_add(${CMAKE_CURRENT_BINARY_DIR}/limine.conf "boot/limine.conf")

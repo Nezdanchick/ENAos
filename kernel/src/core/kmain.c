@@ -10,10 +10,6 @@ void kmain(uint32_t multiboot_addr, uint32_t multiboot_magic)
     serial_init(COM1);
     screen_init();
 
-    serial_write("Hello, world from ENAos!\r\n");
-    screen_write("Hello, world from ENAos!\n");
-
-    while (1) {
-        __asm__ volatile ("hlt");
-    }
+    serial_write("Hello, world from " OS_NAME " " OS_VERSION "!\r\n");
+    screen_write("Hello, world from " OS_NAME " " OS_VERSION "!\n");
 }
