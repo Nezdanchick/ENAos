@@ -1,0 +1,10 @@
+timeout: 1
+default_entry: 1
+
+/@OS_NAME@ @OS_VERSION@ (Text Mode)
+@LIMINE_COMMON_BOOT@
+    textmode: yes
+
+/@OS_NAME@ @OS_VERSION@ (Graphics)
+@LIMINE_COMMON_BOOT@
+    textmode: no

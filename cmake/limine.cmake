@@ -20,3 +20,15 @@ if(NOT EXISTS "${LIMINE_DIR}/limine")
         COMMAND make -C "${LIMINE_DIR}" limine
     )
 endif()
+
+set(LIMINE_COMMON_BOOT "
+    protocol: multiboot2
+    kernel_path: boot():/boot/${KERNEL_NAME}
+    module_path: boot():/boot/${INIT_NAME}
+    module_string: init
+    module_path: boot():/boot/${INITRAMFS_NAME}
+    module_string: initramfs
+")
+
+configure_file(${CMAKE_CURRENT_LIST_DIR}/limine.conf.in ${CMAKE_BINARY_DIR}/limine.conf @ONLY)
+iso_add(${CMAKE_BINARY_DIR}/limine.conf "boot/limine.conf")

@@ -24,7 +24,4 @@ target_include_directories(kernel PRIVATE
     include/arch/${ARCH}
 )
 
-configure_file(limine.conf.in ${CMAKE_CURRENT_BINARY_DIR}/limine.conf @ONLY)
-
 iso_add(kernel "boot/${KERNEL_NAME}")
-iso_add(${CMAKE_CURRENT_BINARY_DIR}/limine.conf "boot/limine.conf")
